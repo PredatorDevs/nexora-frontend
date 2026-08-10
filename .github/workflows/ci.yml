@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  VITE_APP_NAME: Predator Admin
+  VITE_API_BASE_URL: /api/v1
+  VITE_REQUEST_TIMEOUT: 15000
+  VITE_ENABLE_AUDIT_MODULE: 'true'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run test:coverage
+      - run: npm run build:check
+
+  browser:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-results-${{ github.sha }}
+          path: test-results
+          if-no-files-found: ignore
+          retention-days: 14
+
+  artifact:
+    needs: [verify, browser]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build:check
+      - name: Build deterministic release artifact
+        run: |
+          npm sbom --sbom-format cyclonedx > sbom.cdx.json
+          SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)
+          export SOURCE_DATE_EPOCH
+          npm run artifact:manifest
+          npm run artifact:verify
+          tar --sort=name --mtime="@$SOURCE_DATE_EPOCH" --owner=0 --group=0 --numeric-owner -cf - dist | gzip -n > predator-frontend-${GITHUB_SHA}.tar.gz
+          tar --sort=name --mtime="@$SOURCE_DATE_EPOCH" --owner=0 --group=0 --numeric-owner -cf - dist | gzip -n > reproducibility-check.tar.gz
+          cmp predator-frontend-${GITHUB_SHA}.tar.gz reproducibility-check.tar.gz
+          sha256sum predator-frontend-${GITHUB_SHA}.tar.gz > predator-frontend-${GITHUB_SHA}.tar.gz.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: predator-frontend-${{ github.sha }}
+          path: |
+            predator-frontend-${{ github.sha }}.tar.gz
+            predator-frontend-${{ github.sha }}.tar.gz.sha256
+            sbom.cdx.json
+          if-no-files-found: error
+          retention-days: 30
