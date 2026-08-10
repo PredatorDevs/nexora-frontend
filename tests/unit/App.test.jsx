@@ -50,7 +50,7 @@ describe('rutas base', () => {
     renderRoute('/', service);
 
     expect(
-      await screen.findByRole('heading', { name: 'Predator Admin' }),
+      await screen.findByRole('heading', { name: 'Nexora Admin' }),
     ).toBeInTheDocument();
     expect(
       screen.getByText(/sesión iniciada como Admin User/i),
@@ -82,7 +82,7 @@ describe('rutas base', () => {
     const router = renderRoute('/login', service);
 
     expect(
-      await screen.findByRole('heading', { name: 'Predator Admin' }),
+      await screen.findByRole('heading', { name: 'Nexora Admin' }),
     ).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/');
   });

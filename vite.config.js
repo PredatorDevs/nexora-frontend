@@ -7,7 +7,7 @@ import { parseEnvironment } from './src/config/environment-schema.js';
 
 const DEFAULT_DEV_API_PROXY_TARGET = 'http://localhost:3000';
 const testEnvironment = Object.freeze({
-  VITE_APP_NAME: 'Predator Admin',
+  VITE_APP_NAME: 'Nexora ERP',
   VITE_API_BASE_URL: '/api/v1',
   VITE_REQUEST_TIMEOUT: '15000',
   VITE_ENABLE_AUDIT_MODULE: 'true',

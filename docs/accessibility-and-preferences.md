@@ -15,7 +15,7 @@ accede desde el menú de usuario mediante **Apariencia y accesibilidad**.
   `motion` de Ant Design, sin alterar el ciclo de vida de menús y diálogos.
 
 Las preferencias se guardan en `localStorage` bajo la clave versionada
-`predator.ui-preferences.v1`. Son deliberadamente locales al navegador y no
+`nexora.ui-preferences.v1`. Son deliberadamente locales al navegador y no
 forman parte del perfil de seguridad ni requieren cambios en el backend. Si el
 almacenamiento está bloqueado o contiene datos corruptos, se usan valores
 seguros predeterminados.

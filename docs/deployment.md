@@ -13,11 +13,11 @@ npm ci
 npm run build:check
 ```
 
-En el `.env` de `predator-backend-boilerplate` configura:
+En el `.env` de `nexora-backend` configura:
 
 ```env
 SERVE_FRONTEND=true
-FRONTEND_DIST_PATH=../predator-frontend-boilerplate/dist
+FRONTEND_DIST_PATH=../nexora-frontend/dist
 ```
 
 La ruta relativa se resuelve desde donde inicia el proceso backend. En un

@@ -6,7 +6,7 @@ Toda comunicación con el backend pasa por `src/api/api-client.js`. Páginas,
 componentes y módulos no deben importar Axios directamente ni depender de su
 estructura de errores.
 
-El cliente implementa el contrato de `predator-backend-boilerplate`: base
+El cliente implementa el contrato de `nexora-backend`: base
 `/api/v1`, Bearer access token, refresh en cookie HttpOnly y envelopes uniformes.
 
 ## Respuesta pública

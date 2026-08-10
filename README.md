@@ -1,7 +1,7 @@
-# Predator Frontend Boilerplate
+# Nexora ERP Boilerplate
 
 SPA administrativa reutilizable construida con React, Vite y Ant Design para
-consumir `predator-backend-boilerplate`.
+consumir `nexora-backend`.
 
 Incluye autenticación con refresh token HttpOnly, RBAC basado en permisos,
 layout responsivo y módulos de usuarios, roles, permisos, sesiones y auditoría.
@@ -51,7 +51,7 @@ ambientes soportados.
 
 ## Desarrollo integrado
 
-1. Configura y levanta `predator-backend-boilerplate`.
+1. Configura y levanta `nexora-backend`.
 2. Ajusta `DEV_API_PROXY_TARGET` al origen del backend, sin agregar `/api/v1`.
 3. Ejecuta `npm run dev` y abre `http://localhost:5173`.
 4. Inicia sesión con un usuario administrativo existente.

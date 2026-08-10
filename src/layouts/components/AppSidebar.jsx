@@ -12,11 +12,11 @@ export function AppSidebar({ collapsed }) {
       theme="dark"
       width={248}
     >
-      <div className={styles.sidebarBrand} aria-label="Predator Admin">
+      <div className={styles.sidebarBrand} aria-label="Nexora ERP">
         <span className={styles.brandMark} aria-hidden="true">
           P
         </span>
-        {!collapsed && <span className={styles.brandName}>Predator Admin</span>}
+        {!collapsed && <span className={styles.brandName}>Nexora ERP</span>}
       </div>
       <nav aria-label="Navegación principal">
         <NavigationMenu theme="dark" />

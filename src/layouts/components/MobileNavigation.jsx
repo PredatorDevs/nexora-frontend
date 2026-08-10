@@ -12,7 +12,7 @@ export function MobileNavigation({ open, onClose }) {
       placement="left"
       size={280}
       styles={{ body: { padding: 0 } }}
-      title="Predator Admin"
+      title="Nexora ERP"
     >
       <nav aria-label="Navegación principal móvil">
         <NavigationMenu onNavigate={onClose} />

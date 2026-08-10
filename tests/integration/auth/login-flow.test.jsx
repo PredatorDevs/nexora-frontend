@@ -72,7 +72,7 @@ describe('flujo de login', () => {
     await actor.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
 
     expect(
-      await screen.findByRole('heading', { name: 'Predator Admin' }),
+      await screen.findByRole('heading', { name: 'Nexora Admin' }),
     ).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/');
     expect(login).toHaveBeenCalledWith({

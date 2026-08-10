@@ -3,7 +3,7 @@
 ## Propósito
 
 Estas decisiones se verificaron directamente contra
-`../predator-backend-boilerplate`. No reemplazan una futura especificación
+`../nexora-backend`. No reemplazan una futura especificación
 OpenAPI; son la fuente de trabajo hasta documentar cada endpoint.
 
 ## Convenciones confirmadas

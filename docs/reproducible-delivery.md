@@ -5,7 +5,7 @@ El workflow ejecuta en pull requests, `main` y etiquetas `v*`. Usa Node
 incluye formato, lint, cobertura, build validado y Playwright con Chromium.
 
 Después de aprobar las verificaciones se genera
-`predator-frontend-<commit>.tar.gz`. Los archivos se ordenan, propietario y
+`nexora-frontend-<commit>.tar.gz`. Los archivos se ordenan, propietario y
 grupo se normalizan, el tiempo proviene del commit y gzip no guarda timestamp.
 El pipeline construye dos copias y exige igualdad byte a byte.
 
@@ -14,8 +14,8 @@ El artefacto de GitHub incluye además el checksum del paquete y un SBOM
 CycloneDX independiente. Para verificar una descarga:
 
 ```bash
-sha256sum --check predator-frontend-<commit>.tar.gz.sha256
-tar -xzf predator-frontend-<commit>.tar.gz
+sha256sum --check nexora-frontend-<commit>.tar.gz.sha256
+tar -xzf nexora-frontend-<commit>.tar.gz
 node scripts/verify-artifact-manifest.mjs dist
 ```
 

@@ -5,7 +5,7 @@
 - Estado: aceptado
 - Fase: 0 — decisiones de arquitectura
 - Última revisión: 2026-07-20
-- Proyecto: `predator-frontend-boilerplate`
+- Proyecto: `nexora-frontend`
 
 Este documento fija las decisiones iniciales del boilerplate. Una decisión solo
 debe cambiar ante una necesidad comprobable y el cambio debe actualizar este
@@ -14,7 +14,7 @@ documento y las pruebas afectadas.
 ## Objetivo y límites
 
 El proyecto será una SPA administrativa reutilizable que consume el API de
-`predator-backend-boilerplate`. Incluye autenticación, autorización visual por
+`nexora-backend`. Incluye autenticación, autorización visual por
 permisos, navegación dinámica y módulos administrativos de referencia.
 
 El backend es siempre la autoridad de autenticación, autorización y validación
@@ -105,7 +105,7 @@ Solo `src/config/environment.js` leerá `import.meta.env`. Zod validará y
 normalizará las variables al iniciar la aplicación.
 
 ```env
-VITE_APP_NAME=Predator Admin
+VITE_APP_NAME=Nexora ERP
 VITE_API_BASE_URL=/api/v1
 VITE_REQUEST_TIMEOUT=15000
 VITE_ENABLE_AUDIT_MODULE=true
@@ -212,7 +212,7 @@ fallos de red.
 ## Almacenamiento local
 
 Solo se persistirán preferencias no sensibles. Las claves usarán el prefijo
-`predator.frontend.` y tolerarán datos inválidos. Nunca se almacenarán tokens,
+`nexora.frontend.` y tolerarán datos inválidos. Nunca se almacenarán tokens,
 permisos, identidad, respuestas privadas ni formularios administrativos.
 
 ## Errores y observabilidad

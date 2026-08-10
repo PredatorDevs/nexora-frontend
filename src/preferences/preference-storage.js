@@ -1,4 +1,4 @@
-export const PREFERENCE_STORAGE_KEY = 'predator.ui-preferences.v1';
+export const PREFERENCE_STORAGE_KEY = 'nexora.ui-preferences.v1';
 
 export const defaultPreferences = Object.freeze({
   themeMode: 'system',

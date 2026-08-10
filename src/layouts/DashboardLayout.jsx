@@ -49,7 +49,7 @@ export function DashboardLayout() {
           </div>
         </Layout.Content>
         <Layout.Footer className={styles.footer}>
-          Predator Frontend Boilerplate
+          Nexora ERP - © {new Date().getFullYear()}
         </Layout.Footer>
       </Layout>
     </Layout>

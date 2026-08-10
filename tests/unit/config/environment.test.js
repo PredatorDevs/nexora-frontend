@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { parseEnvironment } from '@/config/environment-schema.js';
 
 const validSource = {
-  VITE_APP_NAME: 'Predator Admin',
+  VITE_APP_NAME: 'Nexora Admin',
   VITE_API_BASE_URL: '/api/v1',
   VITE_REQUEST_TIMEOUT: '15000',
   VITE_ENABLE_AUDIT_MODULE: 'true',
@@ -14,11 +14,11 @@ describe('parseEnvironment', () => {
     expect(
       parseEnvironment({
         ...validSource,
-        VITE_APP_NAME: '  Predator Admin  ',
+        VITE_APP_NAME: '  Nexora Admin  ',
         VITE_API_BASE_URL: '/api/v1/',
       }),
     ).toEqual({
-      appName: 'Predator Admin',
+      appName: 'Nexora Admin',
       apiBaseUrl: '/api/v1',
       requestTimeout: 15000,
       enableAuditModule: true,

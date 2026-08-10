@@ -88,7 +88,7 @@ test('inicia sesión y crea un usuario administrativo', async ({ page }) => {
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
 
   await expect(
-    page.getByRole('heading', { name: 'Predator Admin' }),
+    page.getByRole('heading', { name: 'Nexora ERP' }),
   ).toBeVisible();
   await page.getByRole('link', { name: 'Usuarios' }).click();
   await expect(page.getByRole('heading', { name: 'Usuarios' })).toBeVisible();
@@ -151,7 +151,7 @@ test('mantiene visible el menú de usuario al reducir movimiento', async ({
 }) => {
   await page.addInitScript(() => {
     localStorage.setItem(
-      'predator.ui-preferences.v1',
+      'nexora.ui-preferences.v1',
       JSON.stringify({
         themeMode: 'system',
         density: 'comfortable',
