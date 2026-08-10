@@ -1,0 +1,152 @@
+.root {
+  min-height: 100vh;
+}
+
+.skipLink {
+  position: fixed;
+  z-index: 1000;
+  top: 8px;
+  left: 8px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  color: #fff;
+  background: #0958d9;
+  transform: translateY(-150%);
+  transition: transform 120ms ease;
+}
+
+.skipLink:focus {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skipLink {
+    transition: none;
+  }
+}
+
+:global(:root[data-reduce-motion='true']) .skipLink {
+  transition: none;
+}
+
+.sidebar {
+  position: sticky !important;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+}
+
+.sidebarBrand {
+  display: flex;
+  height: 64px;
+  padding: 0 16px;
+  align-items: center;
+  gap: 12px;
+  color: #fff;
+  overflow: hidden;
+}
+
+.brandMark {
+  display: grid;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  color: #0958d9;
+  background: #fff;
+  font-weight: 800;
+  place-items: center;
+}
+
+.brandName {
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.header {
+  position: sticky;
+  z-index: 10;
+  top: 0;
+  display: flex;
+  height: 64px;
+  padding: 0 20px;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--app-border-color);
+  background: var(--app-header-background);
+  backdrop-filter: blur(10px);
+}
+
+.headerStart {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobileBrand {
+  display: none;
+}
+
+.userButton {
+  height: 48px;
+  padding-inline: 8px 12px;
+}
+
+.userName {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.identity {
+  display: flex;
+  max-width: 280px;
+  flex-direction: column;
+}
+
+.content {
+  padding: 20px clamp(16px, 3vw, 32px) 32px;
+}
+
+.breadcrumbs {
+  min-height: 32px;
+  margin-bottom: 12px;
+}
+
+.pageContent {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.footer {
+  padding: 16px 24px;
+  color: var(--app-muted-color);
+  text-align: center;
+}
+
+@media (max-width: 991px) {
+  .mobileBrand {
+    display: inline;
+  }
+}
+
+@media (max-width: 575px) {
+  .header {
+    padding: 0 12px;
+  }
+
+  .userName {
+    display: none;
+  }
+
+  .content {
+    padding-inline: 12px;
+  }
+}

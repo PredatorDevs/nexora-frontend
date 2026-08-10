@@ -1,0 +1,15 @@
+export const routes = Object.freeze({
+  home: '/',
+  login: '/login',
+  users: '/users',
+  roles: '/roles',
+  permissions: '/permissions',
+  sessions: '/sessions',
+  audit: '/audit',
+  entityChanges: '/audit/entity-changes',
+  profile: '/profile',
+  changePassword: '/change-password',
+  preferences: '/preferences',
+  unauthorized: '/unauthorized',
+  notFound: '/not-found',
+});

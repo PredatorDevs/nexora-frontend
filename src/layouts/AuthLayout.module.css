@@ -1,0 +1,87 @@
+.layout {
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: minmax(320px, 0.9fr) minmax(420px, 1.1fr);
+  background: var(--app-background);
+}
+
+.brandPanel {
+  display: grid;
+  padding: clamp(40px, 8vw, 96px);
+  color: #fff;
+  place-items: center;
+  background:
+    radial-gradient(circle at 15% 20%, rgb(255 255 255 / 18%), transparent 30%),
+    linear-gradient(145deg, #0958d9, #003eb3 62%, #061b47);
+}
+
+.brandContent {
+  max-width: 480px;
+}
+
+.brandContent h1 {
+  margin: 12px 0 16px;
+  color: inherit;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.05;
+}
+
+.brandContent p {
+  max-width: 44ch;
+  margin: 0;
+  color: rgb(255 255 255 / 78%);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.brandContent .eyebrow {
+  color: #bae0ff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.brandIcon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgb(255 255 255 / 32%);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 12%);
+  font-size: 22px;
+  place-items: center;
+}
+
+.formPanel {
+  position: relative;
+  display: grid;
+  padding: 32px;
+  place-items: center;
+}
+
+.themeControl {
+  position: absolute;
+  z-index: 1;
+  top: 24px;
+  right: 24px;
+}
+
+@media (max-width: 800px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .brandPanel {
+    display: none;
+  }
+
+  .formPanel {
+    padding: 20px;
+  }
+
+  .themeControl {
+    top: 20px;
+    right: 20px;
+  }
+}
