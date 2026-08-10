@@ -1,0 +1,60 @@
+{
+  "name": "predator-frontend-boilerplate",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Reusable React administrative frontend boilerplate",
+  "type": "module",
+  "packageManager": "npm@10.9.2",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:check": "npm run build && node scripts/check-build.mjs",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "quality": "npm run format:check && npm run lint && npm run test:coverage && npm run test:e2e && npm run build:check",
+    "artifact:manifest": "node scripts/create-artifact-manifest.mjs dist dist/artifact-manifest.json",
+    "artifact:verify": "node scripts/verify-artifact-manifest.mjs dist"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^6.3.2",
+    "@hookform/resolvers": "^5.4.0",
+    "@tanstack/react-query": "^5.101.4",
+    "antd": "^6.5.2",
+    "axios": "^1.18.1",
+    "dayjs": "^1.11.21",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-hook-form": "^7.82.0",
+    "react-router": "^8.3.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.61.1",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@vitejs/plugin-react": "^6.0.4",
+    "@vitest/coverage-v8": "^4.1.10",
+    "eslint": "^10.7.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "globals": "^17.7.0",
+    "jsdom": "^29.1.1",
+    "msw": "^2.15.0",
+    "prettier": "^3.9.6",
+    "vite": "^8.1.5",
+    "vitest": "^4.1.10"
+  }
+}
