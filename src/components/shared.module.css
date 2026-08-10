@@ -1,0 +1,60 @@
+.pageHeader {
+  margin-bottom: 24px;
+}
+
+.pageTitle {
+  margin: 4px 0 6px !important;
+}
+
+.pageDescription {
+  max-width: 70ch;
+  margin-bottom: 0 !important;
+}
+
+.state {
+  width: 100%;
+  padding: clamp(32px, 6vw, 72px) 20px;
+}
+
+.compactState {
+  width: 100%;
+  padding: 20px;
+}
+
+.emptyDescription {
+  display: block;
+  margin-top: 4px;
+  color: #667085;
+}
+
+.filterBar {
+  width: 100%;
+  padding: 12px 0;
+}
+
+.formActions {
+  display: flex !important;
+  margin-top: 24px;
+  justify-content: flex-end;
+}
+
+.pagination {
+  display: flex;
+  padding-top: 16px;
+  justify-content: flex-end;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+}
+
+@media (max-width: 575px) {
+  .formActions {
+    flex-direction: column;
+  }
+
+  .formActions > * {
+    width: 100%;
+  }
+}
