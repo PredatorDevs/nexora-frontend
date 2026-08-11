@@ -10,6 +10,20 @@ const user = {
   status: 'ACTIVE',
   mustChangePassword: false,
 };
+const company = {
+  id: 3,
+  code: 'ACME',
+  legalName: 'Acme, S.A. de C.V.',
+  commercialName: 'Acme',
+  status: 'ACTIVE',
+};
+const membership = { id: 11, companyId: company.id, company };
+const permissionState = {
+  scope: 'COMPANY',
+  permissions: ['users.read'],
+  platformPermissions: ['users.read'],
+  companyPermissions: [],
+};
 
 function response(data) {
   return { data, meta: { requestId: 'request-1' }, status: 200, headers: {} };
@@ -22,7 +36,8 @@ describe('authService', () => {
       get: vi
         .fn()
         .mockResolvedValueOnce(response(user))
-        .mockResolvedValueOnce(response({ permissions: ['users.read'] })),
+        .mockResolvedValueOnce(response([]))
+        .mockResolvedValueOnce(response(permissionState)),
     };
     const service = createAuthService({
       client,
@@ -31,7 +46,10 @@ describe('authService', () => {
 
     await expect(service.recoverSession()).resolves.toEqual({
       user,
-      permissions: ['users.read'],
+      memberships: [],
+      activeMembership: null,
+      requiresCompanySelection: false,
+      ...permissionState,
     });
     expect(client.refreshSession).toHaveBeenCalledOnce();
   });
@@ -39,14 +57,29 @@ describe('authService', () => {
   it('guarda el access token de login únicamente en el store', async () => {
     const tokenStore = createAccessTokenStore();
     const client = {
-      post: vi.fn().mockResolvedValue(response({ accessToken: 'token', user })),
-      get: vi.fn().mockResolvedValue(response({ permissions: ['users.read'] })),
+      post: vi.fn().mockResolvedValue(
+        response({
+          accessToken: 'token',
+          user,
+          activeMembership: membership,
+          memberships: [membership],
+          requiresCompanySelection: false,
+        }),
+      ),
+      get: vi.fn().mockResolvedValue(response(permissionState)),
     };
     const service = createAuthService({ client, tokenStore });
 
     await expect(
       service.login({ email: user.email, password: 'password' }),
-    ).resolves.toEqual({ user, permissions: ['users.read'] });
+    ).resolves.toEqual({
+      accessToken: 'token',
+      user,
+      activeMembership: membership,
+      memberships: [membership],
+      requiresCompanySelection: false,
+      ...permissionState,
+    });
     expect(tokenStore.get()).toBe('token');
     expect(client.post).toHaveBeenCalledWith(
       '/auth/login',
@@ -58,7 +91,15 @@ describe('authService', () => {
   it('limpia el token si no puede completar el login', async () => {
     const tokenStore = createAccessTokenStore();
     const client = {
-      post: vi.fn().mockResolvedValue(response({ accessToken: 'token', user })),
+      post: vi.fn().mockResolvedValue(
+        response({
+          accessToken: 'token',
+          user,
+          activeMembership: membership,
+          memberships: [membership],
+          requiresCompanySelection: false,
+        }),
+      ),
       get: vi.fn().mockRejectedValue(new Error('permissions failed')),
     };
     const service = createAuthService({ client, tokenStore });
@@ -77,5 +118,38 @@ describe('authService', () => {
 
     await expect(service.logout()).rejects.toThrow('offline');
     expect(tokenStore.get()).toBeNull();
+  });
+
+  it('rota el token y reconstruye el contexto al cambiar de empresa', async () => {
+    const tokenStore = createAccessTokenStore();
+    const contextualUser = {
+      ...user,
+      activeContext: { companyId: company.id, membershipId: membership.id },
+    };
+    const client = {
+      post: vi.fn().mockResolvedValue(
+        response({
+          accessToken: 'switched-token',
+          activeMembership: membership,
+        }),
+      ),
+      get: vi
+        .fn()
+        .mockResolvedValueOnce(response(contextualUser))
+        .mockResolvedValueOnce(response([membership]))
+        .mockResolvedValueOnce(response(permissionState)),
+    };
+    const service = createAuthService({ client, tokenStore });
+
+    await expect(service.switchCompany(company.id)).resolves.toMatchObject({
+      user: contextualUser,
+      memberships: [membership],
+      activeMembership: membership,
+      requiresCompanySelection: false,
+    });
+    expect(tokenStore.get()).toBe('switched-token');
+    expect(client.post).toHaveBeenCalledWith('/auth/switch-company', {
+      companyId: company.id,
+    });
   });
 });

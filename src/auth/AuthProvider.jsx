@@ -58,11 +58,10 @@ export function AuthProvider({
     }
 
     initializationPromiseRef.current.then(
-      ({ user, permissions }) => {
+      (session) => {
         if (!mountedRef.current) return;
         setState({
-          user,
-          permissions,
+          ...session,
           status: 'authenticated',
           initializationError: null,
         });
@@ -105,13 +104,21 @@ export function AuthProvider({
     }
   }, [clearPrivateState, service]);
 
-  const switchCompany = useCallback(async (companyId) => {
-    const session = await service.switchCompany(companyId);
-    await queryClientInstance.cancelQueries();
-    queryClientInstance.clear();
-    if (mountedRef.current) setState({ ...session, status: 'authenticated', initializationError: null });
-    return session;
-  }, [queryClientInstance, service]);
+  const switchCompany = useCallback(
+    async (companyId) => {
+      const session = await service.switchCompany(companyId);
+      await queryClientInstance.cancelQueries();
+      queryClientInstance.clear();
+      if (mountedRef.current)
+        setState({
+          ...session,
+          status: 'authenticated',
+          initializationError: null,
+        });
+      return session;
+    },
+    [queryClientInstance, service],
+  );
 
   const refreshCompanyContext = useCallback(async () => {
     const session = await service.refreshCompanyContext();

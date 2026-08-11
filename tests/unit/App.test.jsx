@@ -50,7 +50,7 @@ describe('rutas base', () => {
     renderRoute('/', service);
 
     expect(
-      await screen.findByRole('heading', { name: 'Nexora Admin' }),
+      await screen.findByRole('heading', { name: 'Nexora ERP' }),
     ).toBeInTheDocument();
     expect(
       screen.getByText(/sesión iniciada como Admin User/i),
@@ -82,7 +82,7 @@ describe('rutas base', () => {
     const router = renderRoute('/login', service);
 
     expect(
-      await screen.findByRole('heading', { name: 'Nexora Admin' }),
+      await screen.findByRole('heading', { name: 'Nexora ERP' }),
     ).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/');
   });
@@ -105,5 +105,29 @@ describe('rutas base', () => {
     expect(
       screen.queryByText(/crear cuenta|registrarse|sign up/i),
     ).not.toBeInTheDocument();
+  });
+
+  it('solicita seleccionar empresa cuando la sesión no tiene tenant activo', async () => {
+    const company = {
+      id: 8,
+      code: 'NEXORA',
+      legalName: 'Nexora, S.A. de C.V.',
+      commercialName: 'Nexora',
+      status: 'ACTIVE',
+    };
+    const service = createService(() =>
+      Promise.resolve({
+        user,
+        permissions: [],
+        memberships: [{ id: 12, companyId: company.id, company }],
+        activeMembership: null,
+      }),
+    );
+    const router = renderRoute('/', service);
+
+    expect(
+      await screen.findByRole('heading', { name: 'Selecciona una empresa' }),
+    ).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/select-company');
   });
 });

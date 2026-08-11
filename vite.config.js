@@ -55,6 +55,8 @@ export default defineConfig(({ mode }) => {
       sourcemap: false,
     },
     test: {
+      pool: 'forks',
+      maxWorkers: 2,
       environment: 'jsdom',
       globals: true,
       include: ['tests/{unit,integration}/**/*.{test,spec}.{js,jsx}'],

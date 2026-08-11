@@ -5,7 +5,7 @@ import { useAuth } from '@/auth/useAuth.js';
 import { routes } from '@/app/routes.js';
 
 export function RequireAuth() {
-  const { status, user, memberships, activeMembership } = useAuth();
+  const { status, user, memberships = [], activeMembership = null } = useAuth();
   const location = useLocation();
 
   if (status === 'loading') return <SessionLoading />;

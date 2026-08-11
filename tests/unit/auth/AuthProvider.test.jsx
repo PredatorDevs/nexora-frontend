@@ -25,11 +25,17 @@ function Probe() {
       <span data-testid="initialization-error">
         {auth.initializationError?.code ?? 'none'}
       </span>
+      <span data-testid="active-company">
+        {auth.activeMembership?.company.code ?? 'none'}
+      </span>
       <button type="button" onClick={() => auth.login({})}>
         Login
       </button>
       <button type="button" onClick={() => auth.logout()}>
         Logout
+      </button>
+      <button type="button" onClick={() => auth.switchCompany(9)}>
+        Switch company
       </button>
     </div>
   );
@@ -41,6 +47,8 @@ function createService(overrides = {}) {
     login: vi.fn(),
     logout: vi.fn(),
     logoutAll: vi.fn(),
+    switchCompany: vi.fn(),
+    refreshCompanyContext: vi.fn(),
     clearSession: vi.fn(),
     setSessionExpiredHandler: vi.fn(),
     ...overrides,
@@ -143,5 +151,46 @@ describe('AuthProvider', () => {
     );
     expect(queryClient.getQueryData(['private'])).toBeUndefined();
     expect(service.clearSession).toHaveBeenCalled();
+  });
+
+  it('cambia la empresa activa y limpia los datos del tenant anterior', async () => {
+    const activeMembership = {
+      id: 21,
+      companyId: 9,
+      company: {
+        id: 9,
+        code: 'NUEVA',
+        legalName: 'Nueva Empresa',
+        status: 'ACTIVE',
+      },
+    };
+    const service = createService({
+      recoverSession: vi.fn().mockResolvedValue({
+        user,
+        permissions: [],
+        memberships: [],
+        activeMembership: null,
+      }),
+      switchCompany: vi.fn().mockResolvedValue({
+        user,
+        permissions: ['company_members.read'],
+        memberships: [activeMembership],
+        activeMembership,
+        requiresCompanySelection: false,
+      }),
+    });
+    const queryClient = renderProvider(service);
+    await waitFor(() =>
+      expect(screen.getByTestId('status')).toHaveTextContent('authenticated'),
+    );
+    queryClient.setQueryData(['tenant', 'old'], { secret: true });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Switch company' }));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('active-company')).toHaveTextContent('NUEVA'),
+    );
+    expect(service.switchCompany).toHaveBeenCalledWith(9);
+    expect(queryClient.getQueryData(['tenant', 'old'])).toBeUndefined();
   });
 });

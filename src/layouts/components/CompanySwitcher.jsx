@@ -5,7 +5,11 @@ import { useState } from 'react';
 import { useAuth } from '@/auth/useAuth.js';
 
 export function CompanySwitcher() {
-  const { memberships, activeMembership, switchCompany } = useAuth();
+  const {
+    memberships = [],
+    activeMembership = null,
+    switchCompany,
+  } = useAuth();
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
 
