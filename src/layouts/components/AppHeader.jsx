@@ -4,6 +4,7 @@ import { Button, Layout, Typography } from 'antd';
 import { ThemeSwitch } from '@/components/preferences/ThemeSwitch.jsx';
 import { environment } from '@/config/environment.js';
 import { UserMenu } from '@/layouts/components/UserMenu.jsx';
+import { CompanySwitcher } from '@/layouts/components/CompanySwitcher.jsx';
 import styles from '@/layouts/DashboardLayout.module.css';
 
 export function AppHeader({ collapsed, isDesktop, onNavigationToggle }) {
@@ -33,6 +34,7 @@ export function AppHeader({ collapsed, isDesktop, onNavigationToggle }) {
         </Typography.Text>
       </div>
       <div className={styles.headerActions}>
+        <CompanySwitcher />
         <ThemeSwitch />
         <UserMenu />
       </div>

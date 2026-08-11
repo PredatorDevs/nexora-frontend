@@ -19,15 +19,43 @@ export const authenticatedUserSchema = z.object({
   displayName: z.string().min(1),
   status: z.literal('ACTIVE'),
   mustChangePassword: z.boolean().default(false),
+  activeContext: z
+    .object({ companyId: z.number().int().positive(), membershipId: z.number().int().positive() })
+    .nullable()
+    .optional(),
+});
+
+export const membershipSchema = z.object({
+  id: z.number().int().positive(),
+  companyId: z.number().int().positive(),
+  company: z.object({
+    id: z.number().int().positive(),
+    code: z.string(),
+    legalName: z.string(),
+    commercialName: z.string().nullable().optional(),
+    status: z.string(),
+  }),
 });
 
 export const loginResponseSchema = z.object({
   accessToken: z.string().min(1),
   user: authenticatedUserSchema,
+  activeMembership: membershipSchema.nullable(),
+  memberships: z.array(membershipSchema),
+  requiresCompanySelection: z.boolean(),
+});
+
+export const membershipsSchema = z.array(membershipSchema);
+export const switchCompanyResponseSchema = z.object({
+  accessToken: z.string().min(1),
+  activeMembership: membershipSchema,
 });
 
 export const permissionsResponseSchema = z.object({
   permissions: z.array(z.string().regex(/^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$/)),
+  scope: z.enum(['PLATFORM', 'COMPANY']).optional(),
+  platformPermissions: z.array(z.string()).default([]),
+  companyPermissions: z.array(z.string()).default([]),
 });
 
 export const changePasswordResponseSchema = z.object({

@@ -6,6 +6,8 @@ import {
   loginResponseSchema,
   permissionsResponseSchema,
   changePasswordResponseSchema,
+  membershipsSchema,
+  switchCompanyResponseSchema,
 } from '@/modules/auth/auth.schemas.js';
 
 function parseResponse(schema, response, message) {
@@ -40,36 +42,64 @@ export function createAuthService({
       permissionsResponseSchema,
       response,
       'El servidor devolvió permisos no válidos.',
-    ).permissions;
+    );
+  }
+
+  async function getMemberships() {
+    const response = await client.get('/auth/companies');
+    return parseResponse(membershipsSchema, response, 'El servidor devolviÃ³ empresas no vÃ¡lidas.');
+  }
+
+  async function hydrate(user, memberships) {
+    const permissionState = await getPermissions();
+    const activeMembership = memberships.find(
+      (item) => item.id === user.activeContext?.membershipId,
+    ) ?? null;
+    return { user, memberships, activeMembership, requiresCompanySelection: memberships.length > 0 && !activeMembership, ...permissionState };
   }
 
   return Object.freeze({
+    async refreshCompanyContext() {
+      const [user, memberships] = await Promise.all([getCurrentUser(), getMemberships()]);
+      return hydrate(user, memberships);
+    },
     async recoverSession() {
       await client.refreshSession();
-      const [user, permissions] = await Promise.all([
+      const [user, memberships] = await Promise.all([
         getCurrentUser(),
-        getPermissions(),
+        getMemberships(),
       ]);
-      return { user, permissions };
+      return hydrate(user, memberships);
     },
 
     async login(credentials) {
       const response = await client.post('/auth/login', credentials, {
         skipAuthRefresh: true,
       });
-      const { accessToken, user } = parseResponse(
+      const result = parseResponse(
         loginResponseSchema,
         response,
         'El servidor devolvió una sesión no válida.',
       );
 
-      tokenStore.set(accessToken);
+      tokenStore.set(result.accessToken);
       try {
-        return { user, permissions: await getPermissions() };
+        const permissionState = await getPermissions();
+        return { ...result, ...permissionState };
       } catch (error) {
         tokenStore.clear();
         throw error;
       }
+    },
+
+    async switchCompany(companyId) {
+      const response = await client.post('/auth/switch-company', { companyId });
+      const result = parseResponse(switchCompanyResponseSchema, response, 'No fue posible cambiar de empresa.');
+      tokenStore.set(result.accessToken);
+      const [user, memberships, permissionState] = await Promise.all([
+        getCurrentUser(), getMemberships(), getPermissions(),
+      ]);
+      return { user, memberships, activeMembership: result.activeMembership, requiresCompanySelection: false, ...permissionState };
     },
 
     async logout() {

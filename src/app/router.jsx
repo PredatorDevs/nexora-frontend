@@ -11,6 +11,8 @@ import { permissionRoutes } from '@/modules/permissions/permissions.routes.jsx';
 import { roleRoutes } from '@/modules/roles/roles.routes.jsx';
 import { sessionRoutes } from '@/modules/sessions/sessions.routes.jsx';
 import { userRoutes } from '@/modules/users/users.routes.jsx';
+import { companyRoutes } from '@/modules/companies/companies.routes.jsx';
+import { companyAccessRoutes } from '@/modules/company-access/company-access.routes.jsx';
 
 const loginPage = lazyRoute(
   () => import('@/modules/auth/pages/LoginPage.jsx'),
@@ -27,6 +29,10 @@ const accountPage = lazyRoute(
 const preferencesPage = lazyRoute(
   () => import('@/modules/preferences/pages/PreferencesPage.jsx'),
   'PreferencesPage',
+);
+const companySelectionPage = lazyRoute(
+  () => import('@/modules/auth/pages/CompanySelectionPage.jsx'),
+  'CompanySelectionPage',
 );
 const unauthorizedPage = lazyRoute(
   () => import('@/modules/errors/pages/UnauthorizedPage.jsx'),
@@ -54,6 +60,7 @@ export const appRoutes = [
         element: <DashboardLayout />,
         children: [
           { path: routes.home, element: homePage },
+          { path: routes.selectCompany, element: companySelectionPage },
           { path: routes.profile, element: accountPage },
           { path: routes.changePassword, element: accountPage },
           { path: routes.preferences, element: preferencesPage },
@@ -63,6 +70,8 @@ export const appRoutes = [
           ...permissionRoutes,
           ...sessionRoutes,
           ...auditRoutes,
+          ...companyRoutes,
+          ...companyAccessRoutes,
         ],
       },
     ],

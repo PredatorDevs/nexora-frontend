@@ -1,6 +1,9 @@
 export const routes = Object.freeze({
   home: '/',
   login: '/login',
+  selectCompany: '/select-company',
+  companies: '/companies',
+  companyAccess: '/company-access',
   users: '/users',
   roles: '/roles',
   permissions: '/permissions',

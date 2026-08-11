@@ -4,6 +4,12 @@ import { permissions } from '@/config/permissions.js';
 
 export const navigationItems = Object.freeze([
   Object.freeze({
+    key: 'companies', label: 'Empresas', path: routes.companies, icon: 'home', permission: permissions.companies.read,
+  }),
+  Object.freeze({
+    key: 'company-access', label: 'Acceso de empresa', path: routes.companyAccess, icon: 'roles', permission: permissions.companyMembers.read,
+  }),
+  Object.freeze({
     key: 'home',
     label: 'Inicio',
     path: routes.home,

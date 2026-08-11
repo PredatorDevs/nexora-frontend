@@ -3,6 +3,8 @@ export const queryKeys = Object.freeze({
     me: Object.freeze(['auth', 'me']),
     permissions: Object.freeze(['auth', 'permissions']),
   }),
+  companies: Object.freeze({ all: Object.freeze(['companies']), list: (filters) => ['companies', 'list', filters], detail: (id) => ['companies', 'detail', Number(id)] }),
+  companyAccess: Object.freeze({ all: Object.freeze(['company-access']), members: (id) => ['company-access', Number(id), 'members'], roles: (id) => ['company-access', Number(id), 'roles'] }),
   users: Object.freeze({
     all: Object.freeze(['users']),
     list: (filters) => ['users', 'list', filters],

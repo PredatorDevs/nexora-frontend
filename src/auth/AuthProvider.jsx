@@ -8,6 +8,11 @@ import { authService } from '@/modules/auth/auth.api.js';
 const unauthenticatedState = Object.freeze({
   user: null,
   permissions: [],
+  platformPermissions: [],
+  companyPermissions: [],
+  memberships: [],
+  activeMembership: null,
+  requiresCompanySelection: false,
   status: 'unauthenticated',
   initializationError: null,
 });
@@ -100,6 +105,20 @@ export function AuthProvider({
     }
   }, [clearPrivateState, service]);
 
+  const switchCompany = useCallback(async (companyId) => {
+    const session = await service.switchCompany(companyId);
+    await queryClientInstance.cancelQueries();
+    queryClientInstance.clear();
+    if (mountedRef.current) setState({ ...session, status: 'authenticated', initializationError: null });
+    return session;
+  }, [queryClientInstance, service]);
+
+  const refreshCompanyContext = useCallback(async () => {
+    const session = await service.refreshCompanyContext();
+    if (mountedRef.current) setState((current) => ({ ...current, ...session }));
+    return session;
+  }, [service]);
+
   const logoutAll = useCallback(async () => {
     try {
       await service.logoutAll();
@@ -142,6 +161,8 @@ export function AuthProvider({
       updateProfile,
       changePassword,
       hasPermission,
+      switchCompany,
+      refreshCompanyContext,
     }),
     [
       changePassword,
@@ -150,6 +171,8 @@ export function AuthProvider({
       logout,
       logoutAll,
       state,
+      switchCompany,
+      refreshCompanyContext,
       updateProfile,
     ],
   );
