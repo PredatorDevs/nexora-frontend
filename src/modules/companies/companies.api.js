@@ -7,6 +7,17 @@ export async function listCompanies(params) {
 export async function createCompany(data) {
   return (await apiClient.post('/companies', data)).data;
 }
+export async function getCompany(id) {
+  return (await apiClient.get(`/companies/${id}`)).data;
+}
+export async function updateCompany(id, data) {
+  return (await apiClient.put(`/companies/${id}`, data)).data;
+}
 export async function changeCompanyStatus(id, status, expectedUpdatedAt) {
-  return (await apiClient.patch(`/companies/${id}/status`, { status, expectedUpdatedAt })).data;
+  return (
+    await apiClient.patch(`/companies/${id}/status`, {
+      status,
+      expectedUpdatedAt,
+    })
+  ).data;
 }
