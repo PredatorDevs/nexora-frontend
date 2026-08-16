@@ -4,6 +4,7 @@ export const routes = Object.freeze({
   selectCompany: '/select-company',
   companies: '/companies',
   companyAccess: '/company-access',
+  branches: '/branches',
   users: '/users',
   roles: '/roles',
   permissions: '/permissions',

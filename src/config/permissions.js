@@ -1,12 +1,28 @@
 export const permissions = Object.freeze({
   companies: Object.freeze({
-    read: 'companies.read', create: 'companies.create', update: 'companies.update', changeStatus: 'companies.change_status',
+    read: 'companies.read',
+    create: 'companies.create',
+    update: 'companies.update',
+    changeStatus: 'companies.change_status',
   }),
   companyMembers: Object.freeze({
-    read: 'company_members.read', add: 'company_members.add', changeStatus: 'company_members.change_status', assignRoles: 'company_members.assign_roles',
+    read: 'company_members.read',
+    add: 'company_members.add',
+    changeStatus: 'company_members.change_status',
+    assignRoles: 'company_members.assign_roles',
   }),
   companyRoles: Object.freeze({
-    read: 'company_roles.read', create: 'company_roles.create', update: 'company_roles.update', delete: 'company_roles.delete', assignPermissions: 'company_roles.assign_permissions',
+    read: 'company_roles.read',
+    create: 'company_roles.create',
+    update: 'company_roles.update',
+    delete: 'company_roles.delete',
+    assignPermissions: 'company_roles.assign_permissions',
+  }),
+  branches: Object.freeze({
+    read: 'branches.read',
+    create: 'branches.create',
+    update: 'branches.update',
+    changeStatus: 'branches.change_status',
   }),
   users: Object.freeze({
     read: 'users.read',

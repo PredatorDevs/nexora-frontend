@@ -32,6 +32,7 @@ import * as api from '@/modules/company-access/company-access.api.js';
 const permissionCatalog = [
   ...Object.values(permissions.companyMembers),
   ...Object.values(permissions.companyRoles),
+  ...Object.values(permissions.branches),
   'address_dictionaries.read',
   'economic_activities.read',
 ].map((code) => {
