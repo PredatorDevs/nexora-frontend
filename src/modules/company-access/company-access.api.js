@@ -15,6 +15,17 @@ export async function listRoles(companyId) {
 export async function addMember(companyId, data) {
   return (await apiClient.post(`/companies/${companyId}/members`, data)).data;
 }
+export async function inviteMember(companyId, data) {
+  return (await apiClient.post(`/companies/${companyId}/invitations`, data)).data;
+}
+export async function listInvitations(companyId) {
+  return (await apiClient.get(`/companies/${companyId}/invitations`, {
+    params: { page: 1, pageSize: 100, sortBy: 'createdAt', sortOrder: 'desc' },
+  })).data;
+}
+export async function revokeInvitation(companyId, invitationId) {
+  await apiClient.delete(`/companies/${companyId}/invitations/${invitationId}`);
+}
 export async function createRole(companyId, data) {
   return (await apiClient.post(`/companies/${companyId}/roles`, data)).data;
 }

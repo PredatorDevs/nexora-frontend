@@ -57,6 +57,11 @@ export function CompanyAccessManagementPage() {
     queryFn: () => api.listRoles(companyId),
     enabled: Boolean(companyId),
   });
+  const invitations = useQuery({
+    queryKey: ['company-access', companyId, 'invitations'],
+    queryFn: () => api.listInvitations(companyId),
+    enabled: Boolean(companyId),
+  });
   const refreshMembers = () =>
     client.invalidateQueries({
       queryKey: queryKeys.companyAccess.members(companyId),
@@ -65,8 +70,12 @@ export function CompanyAccessManagementPage() {
     client.invalidateQueries({
       queryKey: queryKeys.companyAccess.roles(companyId),
     });
+  const refreshInvitations = () =>
+    client.invalidateQueries({
+      queryKey: ['company-access', companyId, 'invitations'],
+    });
   const mutations = {
-    addMember: useMutation({ mutationFn: (v) => api.addMember(companyId, v) }),
+    addMember: useMutation({ mutationFn: (v) => api.inviteMember(companyId, v) }),
     memberRoles: useMutation({
       mutationFn: ({ member, roleIds }) =>
         api.replaceMemberRoles(companyId, member.id, roleIds, member.updatedAt),
@@ -92,12 +101,16 @@ export function CompanyAccessManagementPage() {
     deleteRole: useMutation({
       mutationFn: (role) => api.deleteRole(companyId, role.id, role.updatedAt),
     }),
+    revokeInvitation: useMutation({
+      mutationFn: (invitation) =>
+        api.revokeInvitation(companyId, invitation.id),
+    }),
   };
   async function run(operation, refresh, success, close) {
     try {
-      await operation();
+      const result = await operation();
       await refresh();
-      message.success(success);
+      message.success(typeof success === 'function' ? success(result) : success);
       close?.();
     } catch (error) {
       message.error(error.message);
@@ -214,6 +227,38 @@ export function CompanyAccessManagementPage() {
       ),
     },
   ];
+  const invitationColumns = [
+    { title: 'Correo', dataIndex: 'email' },
+    {
+      title: 'Roles',
+      render: (_, invitation) =>
+        invitation.roles.map(({ role }) => <Tag key={role.id}>{role.name}</Tag>),
+    },
+    { title: 'Estado', dataIndex: 'status' },
+    {
+      title: 'Expira',
+      dataIndex: 'expiresAt',
+      render: (value) => new Date(value).toLocaleString(),
+    },
+    {
+      title: 'Acciones',
+      render: (_, invitation) =>
+        invitation.status === 'PENDING' ? (
+          <Button
+            danger
+            onClick={() =>
+              run(
+                () => mutations.revokeInvitation.mutateAsync(invitation),
+                refreshInvitations,
+                'InvitaciÃ³n revocada.',
+              )
+            }
+          >
+            Revocar
+          </Button>
+        ) : null,
+    },
+  ];
   return (
     <>
       <PageHeader
@@ -278,6 +323,23 @@ export function CompanyAccessManagementPage() {
               </Card>
             ),
           },
+          {
+            key: 'invitations',
+            label: 'Invitaciones',
+            children: (
+              <Card>
+                <DataTable
+                  ariaLabel="Invitaciones"
+                  columns={invitationColumns}
+                  dataSource={invitations.data}
+                  isLoading={invitations.isLoading}
+                  error={invitations.error}
+                  onRetry={invitations.refetch}
+                  pagination={false}
+                />
+              </Card>
+            ),
+          },
         ]}
       />
       <MemberModal
@@ -287,6 +349,22 @@ export function CompanyAccessManagementPage() {
         close={() => setMemberModal(null)}
         run={run}
         refresh={refreshMembers}
+        refreshInvitations={refreshInvitations}
+        showInvitation={(invitation) => {
+          if (!invitation.acceptanceUrl) return;
+          dialog.info({
+            title: 'InvitaciÃ³n creada',
+            content: (
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <Typography.Paragraph>
+                  Comparte este enlace con la persona invitada. Expira en siete dÃ­as.
+                </Typography.Paragraph>
+                <Input.TextArea readOnly value={invitation.acceptanceUrl} autoSize />
+              </Space>
+            ),
+            width: 620,
+          });
+        }}
       />
       <RoleModal
         state={roleModal}
@@ -299,7 +377,7 @@ export function CompanyAccessManagementPage() {
   );
 }
 
-function MemberModal({ state, roles, mutations, close, run, refresh }) {
+function MemberModal({ state, roles, mutations, close, run, refresh, refreshInvitations, showInvitation }) {
   if (!state) return null;
   const editing = state.type === 'roles';
   const initialValues = editing
@@ -325,8 +403,13 @@ function MemberModal({ state, roles, mutations, close, run, refresh }) {
                     roleIds: values.roleIds,
                   })
                 : mutations.addMember.mutateAsync(values),
-            refresh,
-            editing ? 'Roles actualizados.' : 'Miembro agregado.',
+            editing ? refresh : refreshInvitations,
+            editing
+              ? 'Roles actualizados.'
+              : (invitation) => {
+                  showInvitation(invitation);
+                  return 'InvitaciÃ³n creada.';
+                },
             close,
           )
         }
@@ -334,7 +417,8 @@ function MemberModal({ state, roles, mutations, close, run, refresh }) {
         {!editing && (
           <>
             <Typography.Paragraph type="secondary">
-              El usuario debe existir previamente como identidad global.
+              Se crearÃ¡ una invitaciÃ³n segura. Si el correo no tiene cuenta,
+              la persona podrÃ¡ crearla al aceptar.
             </Typography.Paragraph>
             <Form.Item
               name="email"

@@ -19,6 +19,10 @@ const loginPage = lazyRoute(
   () => import('@/modules/auth/pages/LoginPage.jsx'),
   'LoginPage',
 );
+const acceptInvitationPage = lazyRoute(
+  () => import('@/modules/company-access/pages/AcceptInvitationPage.jsx'),
+  'AcceptInvitationPage',
+);
 const homePage = lazyRoute(
   () => import('@/modules/home/pages/HomePage.jsx'),
   'HomePage',
@@ -45,6 +49,10 @@ const notFoundPage = lazyRoute(
 );
 
 export const appRoutes = [
+  {
+    element: <AuthLayout />,
+    children: [{ path: routes.acceptInvitation, element: acceptInvitationPage }],
+  },
   {
     element: <RequireGuest />,
     children: [

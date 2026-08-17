@@ -122,7 +122,7 @@ export function createAuthService({
       const result = parseResponse(
         switchCompanyResponseSchema,
         response,
-        'No fue posible volver a la administraciÃ³n de plataforma.',
+        'No fue posible volver a la administración de plataforma.',
       );
       tokenStore.set(result.accessToken);
       const [user, memberships, permissionState] = await Promise.all([

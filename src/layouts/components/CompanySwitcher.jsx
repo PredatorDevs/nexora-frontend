@@ -30,7 +30,7 @@ export function CompanySwitcher() {
       try {
         await switchPlatform();
         navigate(routes.companies, { replace: true });
-        message.success('AdministraciÃ³n de plataforma activa.');
+        message.success('Administración de plataforma activa.');
       } catch (error) {
         message.error(error.message);
       } finally {
@@ -64,7 +64,7 @@ export function CompanySwitcher() {
           ? [
               {
                 value: PLATFORM_CONTEXT,
-                label: 'AdministraciÃ³n de plataforma',
+                label: 'Administración de plataforma',
               },
             ]
           : []),
