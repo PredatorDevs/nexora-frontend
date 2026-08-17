@@ -10,8 +10,8 @@ export function BranchForm({
   onSubmit,
 }) {
   const [form] = Form.useForm();
+  const countryId = Form.useWatch('countryId', form);
   const departmentId = Form.useWatch('departmentId', form);
-  const municipalityId = Form.useWatch('municipalityId', form);
   const countries = useQuery({
     queryKey: ['catalogs', 'countries'],
     queryFn: catalogs.listCountries,
@@ -29,11 +29,13 @@ export function BranchForm({
     staleTime: 300000,
   });
   const districts = useQuery({
-    queryKey: ['catalogs', 'districts', municipalityId],
-    queryFn: () => catalogs.listDistricts(municipalityId),
-    enabled: Boolean(municipalityId),
+    queryKey: ['catalogs', 'districts', { departmentId }],
+    queryFn: () => catalogs.listDistricts({ departmentId }),
+    enabled: Boolean(departmentId),
     staleTime: 300000,
   });
+  const selectedCountry = countries.data?.find(({ id }) => id === countryId);
+  const isElSalvador = selectedCountry?.abbreviation === 'SV';
   return (
     <Form
       form={form}
@@ -42,6 +44,15 @@ export function BranchForm({
       onFinish={(values) =>
         onSubmit({
           ...values,
+          departmentId: isElSalvador ? values.departmentId : null,
+          municipalityId: isElSalvador ? values.municipalityId : null,
+          districtId: isElSalvador ? values.districtId : null,
+          foreignAdministrativeArea: isElSalvador
+            ? null
+            : nullable(values.foreignAdministrativeArea),
+          foreignLocality: isElSalvador
+            ? null
+            : nullable(values.foreignLocality),
           phone: nullable(values.phone),
           email: nullable(values.email),
         })
@@ -72,9 +83,20 @@ export function BranchForm({
               optionFilterProp="label"
               loading={countries.isLoading}
               options={countries.data?.map(option)}
+              onChange={() =>
+                form.setFieldsValue({
+                  departmentId: undefined,
+                  municipalityId: undefined,
+                  districtId: undefined,
+                  foreignAdministrativeArea: undefined,
+                  foreignLocality: undefined,
+                })
+              }
             />
           </Form.Item>
         </Col>
+        {isElSalvador ? (
+          <>
         <Col xs={24} md={12}>
           <Form.Item
             name="departmentId"
@@ -95,37 +117,67 @@ export function BranchForm({
             />
           </Form.Item>
         </Col>
-        <Col xs={24} md={12}>
-          <Form.Item
-            name="municipalityId"
-            label="Municipio"
+          </>
+        ) : countryId ? (
+          <>
+            <Col xs={24} md={12}>
+              <Form.Item
+                name="foreignAdministrativeArea"
+                label="Estado, provincia o regiÃ³n"
+                rules={[{ required: true }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item
+                name="foreignLocality"
+                label="Ciudad o localidad"
+                rules={[{ required: true }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+          </>
+        ) : null}
+        {isElSalvador ? (
+          <Col xs={24} md={12}>
+            <Form.Item
+              name="districtId"
+            label="Distrito"
             rules={[{ required: true }]}
           >
             <Select
               disabled={!departmentId}
               showSearch
               optionFilterProp="label"
-              loading={municipalities.isLoading}
-              options={municipalities.data?.map(option)}
-              onChange={() => form.setFieldValue('districtId', undefined)}
-            />
-          </Form.Item>
-        </Col>
-        <Col xs={24} md={12}>
-          <Form.Item
-            name="districtId"
-            label="Distrito"
-            rules={[{ required: true }]}
-          >
-            <Select
-              disabled={!municipalityId}
-              showSearch
-              optionFilterProp="label"
               loading={districts.isLoading}
               options={districts.data?.map(option)}
+              onChange={(districtId) => {
+                const district = districts.data?.find(
+                  ({ id }) => id === districtId,
+                );
+                form.setFieldValue('municipalityId', district?.municipalityId);
+              }}
             />
-          </Form.Item>
-        </Col>
+            </Form.Item>
+          </Col>
+        ) : null}
+        {isElSalvador ? (
+          <Col xs={24} md={12}>
+            <Form.Item
+              name="municipalityId"
+              label="Municipio (asignado por el distrito)"
+              rules={[{ required: true }]}
+            >
+              <Select
+                disabled
+                loading={municipalities.isLoading}
+                options={municipalities.data?.map(option)}
+              />
+            </Form.Item>
+          </Col>
+        ) : null}
         <Col span={24}>
           <Form.Item
             name="addressLine"

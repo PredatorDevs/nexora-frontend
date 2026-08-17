@@ -1,4 +1,4 @@
-import { Button, Col, Form, Input, Row, Select, Space } from 'antd';
+import { Alert, Button, Col, Form, Input, Row, Select, Space } from 'antd';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
@@ -18,8 +18,8 @@ export function CompanyForm({
 }) {
   const [form] = Form.useForm();
   const [activitySearch, setActivitySearch] = useState('');
+  const countryId = Form.useWatch('countryId', form);
   const departmentId = Form.useWatch('departmentId', form);
-  const municipalityId = Form.useWatch('municipalityId', form);
   const countries = useQuery({
     queryKey: ['catalogs', 'countries'],
     queryFn: catalogs.listCountries,
@@ -37,9 +37,9 @@ export function CompanyForm({
     staleTime: 300_000,
   });
   const districts = useQuery({
-    queryKey: ['catalogs', 'districts', municipalityId],
-    queryFn: () => catalogs.listDistricts(municipalityId),
-    enabled: Boolean(municipalityId),
+    queryKey: ['catalogs', 'districts', { departmentId }],
+    queryFn: () => catalogs.listDistricts({ departmentId }),
+    enabled: Boolean(departmentId),
     staleTime: 300_000,
   });
   const activities = useQuery({
@@ -47,11 +47,29 @@ export function CompanyForm({
     queryFn: () => catalogs.listEconomicActivities(activitySearch),
     staleTime: 60_000,
   });
+  const selectedCountry = countries.data?.find(({ id }) => id === countryId);
+  const isElSalvador = selectedCountry?.abbreviation === 'SV';
+  const catalogError = countries.error ?? departments.error ?? activities.error;
+
+  function retryCatalogs() {
+    void countries.refetch();
+    void departments.refetch();
+    void activities.refetch();
+  }
 
   async function submit(values) {
     const activityTypes = ['PRIMARY', 'SECONDARY', 'TERTIARY'];
     await onSubmit({
       ...values,
+      departmentId: isElSalvador ? values.departmentId : null,
+      municipalityId: isElSalvador ? values.municipalityId : null,
+      districtId: isElSalvador ? values.districtId : null,
+      foreignAdministrativeArea: isElSalvador
+        ? null
+        : nullable(values.foreignAdministrativeArea),
+      foreignLocality: isElSalvador
+        ? null
+        : nullable(values.foreignLocality),
       phone: nullable(values.phone),
       email: nullable(values.email),
       website: nullable(values.website),
@@ -79,6 +97,16 @@ export function CompanyForm({
         ...initialValues,
       }}
     >
+      {catalogError ? (
+        <Alert
+          type="error"
+          showIcon
+          title="No fue posible cargar los catálogos"
+          description={catalogError.message}
+          action={<Button onClick={retryCatalogs}>Reintentar</Button>}
+          style={{ marginBottom: 16 }}
+        />
+      ) : null}
       <Row gutter={16}>
         {!initialValues && (
           <Col xs={24} md={8}>
@@ -122,9 +150,20 @@ export function CompanyForm({
               optionFilterProp="label"
               loading={countries.isLoading}
               options={countries.data?.map(option)}
+              onChange={() =>
+                form.setFieldsValue({
+                  departmentId: undefined,
+                  municipalityId: undefined,
+                  districtId: undefined,
+                  foreignAdministrativeArea: undefined,
+                  foreignLocality: undefined,
+                })
+              }
             />
           </Form.Item>
         </Col>
+        {isElSalvador ? (
+          <>
         <Col xs={24} md={8}>
           <Form.Item
             name="departmentId"
@@ -145,37 +184,67 @@ export function CompanyForm({
             />
           </Form.Item>
         </Col>
-        <Col xs={24} md={8}>
-          <Form.Item
-            name="municipalityId"
-            label="Municipio"
-            rules={[{ required: true }]}
-          >
-            <Select
-              showSearch
-              optionFilterProp="label"
-              disabled={!departmentId}
-              loading={municipalities.isLoading}
-              options={municipalities.data?.map(option)}
-              onChange={() => form.setFieldValue('districtId', undefined)}
-            />
-          </Form.Item>
-        </Col>
-        <Col xs={24} md={8}>
-          <Form.Item
-            name="districtId"
+          </>
+        ) : countryId ? (
+          <>
+            <Col xs={24} md={8}>
+              <Form.Item
+                name="foreignAdministrativeArea"
+                label="Estado, provincia o regiÃ³n"
+                rules={[{ required: true }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={8}>
+              <Form.Item
+                name="foreignLocality"
+                label="Ciudad o localidad"
+                rules={[{ required: true }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+          </>
+        ) : null}
+        {isElSalvador ? (
+          <Col xs={24} md={8}>
+            <Form.Item
+              name="districtId"
             label="Distrito"
             rules={[{ required: true }]}
           >
             <Select
               showSearch
               optionFilterProp="label"
-              disabled={!municipalityId}
+              disabled={!departmentId}
               loading={districts.isLoading}
               options={districts.data?.map(option)}
+              onChange={(districtId) => {
+                const district = districts.data?.find(
+                  ({ id }) => id === districtId,
+                );
+                form.setFieldValue('municipalityId', district?.municipalityId);
+              }}
             />
-          </Form.Item>
-        </Col>
+            </Form.Item>
+          </Col>
+        ) : null}
+        {isElSalvador ? (
+          <Col xs={24} md={8}>
+            <Form.Item
+              name="municipalityId"
+              label="Municipio (asignado por el distrito)"
+              rules={[{ required: true }]}
+            >
+              <Select
+                disabled
+                loading={municipalities.isLoading}
+                options={municipalities.data?.map(option)}
+              />
+            </Form.Item>
+          </Col>
+        ) : null}
         <Col span={24}>
           <Form.Item
             name="addressLine"

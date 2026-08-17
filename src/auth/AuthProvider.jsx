@@ -120,6 +120,19 @@ export function AuthProvider({
     [queryClientInstance, service],
   );
 
+  const switchPlatform = useCallback(async () => {
+    const session = await service.switchPlatform();
+    await queryClientInstance.cancelQueries();
+    queryClientInstance.clear();
+    if (mountedRef.current)
+      setState({
+        ...session,
+        status: 'authenticated',
+        initializationError: null,
+      });
+    return session;
+  }, [queryClientInstance, service]);
+
   const refreshCompanyContext = useCallback(async () => {
     const session = await service.refreshCompanyContext();
     if (mountedRef.current) setState((current) => ({ ...current, ...session }));
@@ -169,6 +182,7 @@ export function AuthProvider({
       changePassword,
       hasPermission,
       switchCompany,
+      switchPlatform,
       refreshCompanyContext,
     }),
     [
@@ -179,6 +193,7 @@ export function AuthProvider({
       logoutAll,
       state,
       switchCompany,
+      switchPlatform,
       refreshCompanyContext,
       updateProfile,
     ],

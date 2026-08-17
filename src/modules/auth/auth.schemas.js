@@ -48,7 +48,7 @@ export const loginResponseSchema = z.object({
 export const membershipsSchema = z.array(membershipSchema);
 export const switchCompanyResponseSchema = z.object({
   accessToken: z.string().min(1),
-  activeMembership: membershipSchema,
+  activeMembership: membershipSchema.nullable(),
 });
 
 export const permissionsResponseSchema = z.object({

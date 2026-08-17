@@ -29,7 +29,7 @@ export function CompanySelectionPage() {
 
   return (
     <>
-      <PageHeader title="Selecciona una empresa" description="Elige el espacio de trabajo que deseas utilizar en esta sesiÃ³n." />
+      <PageHeader title="Selecciona una empresa" description="Elige el espacio de trabajo que deseas utilizar en esta sesión." />
       <Row gutter={[16, 16]}>
         {memberships.map(({ company }) => (
           <Col xs={24} md={12} xl={8} key={company.id}>

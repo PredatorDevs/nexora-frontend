@@ -55,7 +55,16 @@ export function createAuthService({
     const activeMembership = memberships.find(
       (item) => item.id === user.activeContext?.membershipId,
     ) ?? null;
-    return { user, memberships, activeMembership, requiresCompanySelection: memberships.length > 0 && !activeMembership, ...permissionState };
+    return {
+      user,
+      memberships,
+      activeMembership,
+      requiresCompanySelection:
+        memberships.length > 0 &&
+        !activeMembership &&
+        permissionState.platformPermissions.length === 0,
+      ...permissionState,
+    };
   }
 
   return Object.freeze({
@@ -85,7 +94,13 @@ export function createAuthService({
       tokenStore.set(result.accessToken);
       try {
         const permissionState = await getPermissions();
-        return { ...result, ...permissionState };
+        return {
+          ...result,
+          requiresCompanySelection:
+            result.requiresCompanySelection &&
+            permissionState.platformPermissions.length === 0,
+          ...permissionState,
+        };
       } catch (error) {
         tokenStore.clear();
         throw error;
@@ -100,6 +115,28 @@ export function createAuthService({
         getCurrentUser(), getMemberships(), getPermissions(),
       ]);
       return { user, memberships, activeMembership: result.activeMembership, requiresCompanySelection: false, ...permissionState };
+    },
+
+    async switchPlatform() {
+      const response = await client.post('/auth/switch-platform');
+      const result = parseResponse(
+        switchCompanyResponseSchema,
+        response,
+        'No fue posible volver a la administraciÃ³n de plataforma.',
+      );
+      tokenStore.set(result.accessToken);
+      const [user, memberships, permissionState] = await Promise.all([
+        getCurrentUser(),
+        getMemberships(),
+        getPermissions(),
+      ]);
+      return {
+        user,
+        memberships,
+        activeMembership: null,
+        requiresCompanySelection: false,
+        ...permissionState,
+      };
     },
 
     async logout() {

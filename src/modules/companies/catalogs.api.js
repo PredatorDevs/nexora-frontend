@@ -16,7 +16,7 @@ export const listCountries = () => list('/address-dictionaries/countries');
 export const listDepartments = () => list('/address-dictionaries/departments');
 export const listMunicipalities = (departmentId) =>
   list('/address-dictionaries/municipalities', { departmentId });
-export const listDistricts = (municipalityId) =>
-  list('/address-dictionaries/districts', { municipalityId });
+export const listDistricts = ({ municipalityId, departmentId } = {}) =>
+  list('/address-dictionaries/districts', { municipalityId, departmentId });
 export const listEconomicActivities = (search) =>
   list('/economic-activities', { sortBy: 'code', search: search || undefined });
