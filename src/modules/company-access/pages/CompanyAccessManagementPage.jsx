@@ -250,7 +250,7 @@ export function CompanyAccessManagementPage() {
               run(
                 () => mutations.revokeInvitation.mutateAsync(invitation),
                 refreshInvitations,
-                'InvitaciÃ³n revocada.',
+                'Invitación revocada.',
               )
             }
           >
@@ -353,7 +353,7 @@ export function CompanyAccessManagementPage() {
         showInvitation={(invitation) => {
           if (!invitation.acceptanceUrl) return;
           dialog.info({
-            title: 'InvitaciÃ³n creada',
+            title: 'Invitación creada',
             content: (
               <Space direction="vertical" style={{ width: '100%' }}>
                 <Typography.Paragraph>
@@ -408,7 +408,7 @@ function MemberModal({ state, roles, mutations, close, run, refresh, refreshInvi
               ? 'Roles actualizados.'
               : (invitation) => {
                   showInvitation(invitation);
-                  return 'InvitaciÃ³n creada.';
+                  return 'Invitación creada.';
                 },
             close,
           )

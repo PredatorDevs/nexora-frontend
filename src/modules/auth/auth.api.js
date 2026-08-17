@@ -47,7 +47,7 @@ export function createAuthService({
 
   async function getMemberships() {
     const response = await client.get('/auth/companies');
-    return parseResponse(membershipsSchema, response, 'El servidor devolviÃ³ empresas no vÃ¡lidas.');
+    return parseResponse(membershipsSchema, response, 'El servidor devolvió empresas no vÃ¡lidas.');
   }
 
   async function hydrate(user, memberships) {

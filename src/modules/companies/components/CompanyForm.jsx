@@ -190,7 +190,7 @@ export function CompanyForm({
             <Col xs={24} md={8}>
               <Form.Item
                 name="foreignAdministrativeArea"
-                label="Estado, provincia o regiÃ³n"
+                label="Estado, provincia o región"
                 rules={[{ required: true }]}
               >
                 <Input />

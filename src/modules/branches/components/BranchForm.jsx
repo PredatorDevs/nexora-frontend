@@ -123,7 +123,7 @@ export function BranchForm({
             <Col xs={24} md={12}>
               <Form.Item
                 name="foreignAdministrativeArea"
-                label="Estado, provincia o regiÃ³n"
+                label="Estado, provincia o región"
                 rules={[{ required: true }]}
               >
                 <Input />
