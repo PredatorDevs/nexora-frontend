@@ -417,8 +417,8 @@ function MemberModal({ state, roles, mutations, close, run, refresh, refreshInvi
         {!editing && (
           <>
             <Typography.Paragraph type="secondary">
-              Se crearÃ¡ una invitaciÃ³n segura. Si el correo no tiene cuenta,
-              la persona podrÃ¡ crearla al aceptar.
+              Se creará una invitación segura. Si el correo no tiene cuenta,
+              la persona podrá crearla al aceptar.
             </Typography.Paragraph>
             <Form.Item
               name="email"
