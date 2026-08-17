@@ -29,6 +29,12 @@ export const queryKeys = Object.freeze({
     all: Object.freeze(['locations']),
     list: (filters) => ['locations', 'list', filters],
   }),
+  suppliers: Object.freeze({
+    all: Object.freeze(['suppliers']),
+    list: (filters) => ['suppliers', 'list', filters],
+    contactsAll: (supplierId) => ['suppliers', Number(supplierId), 'contacts'],
+    contacts: (supplierId, filters) => ['suppliers', Number(supplierId), 'contacts', filters],
+  }),
   users: Object.freeze({
     all: Object.freeze(['users']),
     list: (filters) => ['users', 'list', filters],

@@ -42,6 +42,19 @@ export const permissions = Object.freeze({
     update: 'locations.update',
     changeStatus: 'locations.change_status',
   }),
+  suppliers: Object.freeze({
+    read: 'suppliers.read',
+    create: 'suppliers.create',
+    update: 'suppliers.update',
+    changeStatus: 'suppliers.change_status',
+  }),
+  supplierContacts: Object.freeze({
+    read: 'supplier_contacts.read',
+    create: 'supplier_contacts.create',
+    update: 'supplier_contacts.update',
+    changeStatus: 'supplier_contacts.change_status',
+    setPrimary: 'supplier_contacts.set_primary',
+  }),
   users: Object.freeze({
     read: 'users.read',
     create: 'users.create',

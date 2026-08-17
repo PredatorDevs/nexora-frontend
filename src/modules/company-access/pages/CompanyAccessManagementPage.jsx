@@ -36,6 +36,8 @@ const permissionCatalog = [
   ...Object.values(permissions.warehouseCategories),
   ...Object.values(permissions.warehouses),
   ...Object.values(permissions.locations),
+  ...Object.values(permissions.suppliers),
+  ...Object.values(permissions.supplierContacts),
   'address_dictionaries.read',
   'economic_activities.read',
 ].map((code) => {

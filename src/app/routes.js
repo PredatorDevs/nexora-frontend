@@ -9,6 +9,7 @@ export const routes = Object.freeze({
   warehouseCategories: '/warehouse-categories',
   warehouses: '/warehouses',
   locations: '/locations',
+  suppliers: '/suppliers',
   users: '/users',
   roles: '/roles',
   permissions: '/permissions',
