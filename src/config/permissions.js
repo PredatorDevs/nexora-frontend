@@ -24,6 +24,12 @@ export const permissions = Object.freeze({
     update: 'branches.update',
     changeStatus: 'branches.change_status',
   }),
+  warehouseCategories: Object.freeze({
+    read: 'warehouse_categories.read',
+    create: 'warehouse_categories.create',
+    update: 'warehouse_categories.update',
+    changeStatus: 'warehouse_categories.change_status',
+  }),
   users: Object.freeze({
     read: 'users.read',
     create: 'users.create',

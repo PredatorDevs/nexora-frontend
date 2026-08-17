@@ -18,7 +18,6 @@ export function RoleForm({ mode, initialValues, onSubmit, onCancel }) {
   } = useForm({
     resolver: zodResolver(isCreate ? createRoleSchema : updateRoleSchema),
     defaultValues: {
-      ...(isCreate ? { code: '' } : {}),
       name: initialValues?.name ?? '',
       description: initialValues?.description ?? '',
     },
@@ -56,11 +55,6 @@ export function RoleForm({ mode, initialValues, onSubmit, onCancel }) {
       {errors.root ? (
         <Alert type="error" showIcon title={errors.root.message} />
       ) : null}
-      {isCreate
-        ? field('code', 'Código', (props) => (
-            <Input {...props} placeholder="OPERATIONS_MANAGER" />
-          ))
-        : null}
       {field('name', 'Nombre', (props) => (
         <Input {...props} />
       ))}

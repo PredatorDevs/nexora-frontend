@@ -59,13 +59,6 @@ export function BranchForm({
       }
     >
       <Row gutter={16}>
-        {!initialValues && (
-          <Col xs={24} md={8}>
-            <Form.Item name="code" label="Código" rules={[{ required: true }]}>
-              <Input />
-            </Form.Item>
-          </Col>
-        )}
         <Col xs={24} md={16}>
           <Form.Item name="name" label="Nombre" rules={[{ required: true }]}>
             <Input />

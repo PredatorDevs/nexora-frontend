@@ -41,17 +41,6 @@ const editableFields = {
     .transform((value) => value || null),
 };
 
-export const createRoleSchema = z.object({
-  code: z
-    .string()
-    .trim()
-    .toUpperCase()
-    .regex(
-      /^[A-Z][A-Z0-9_]*$/,
-      'Usa mayúsculas, números o guiones bajos y comienza con una letra.',
-    )
-    .max(100),
-  ...editableFields,
-});
+export const createRoleSchema = z.object(editableFields);
 
 export const updateRoleSchema = z.object(editableFields);

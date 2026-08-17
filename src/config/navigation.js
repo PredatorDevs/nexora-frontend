@@ -25,6 +25,13 @@ export const navigationItems = Object.freeze([
     permission: permissions.branches.read,
   }),
   Object.freeze({
+    key: 'warehouse-categories',
+    label: 'Categorías de almacén',
+    path: routes.warehouseCategories,
+    icon: 'home',
+    permission: permissions.warehouseCategories.read,
+  }),
+  Object.freeze({
     key: 'home',
     label: 'Inicio',
     path: routes.home,

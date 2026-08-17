@@ -108,13 +108,6 @@ export function CompanyForm({
         />
       ) : null}
       <Row gutter={16}>
-        {!initialValues && (
-          <Col xs={24} md={8}>
-            <Form.Item name="code" label="Código" rules={[{ required: true }]}>
-              <Input />
-            </Form.Item>
-          </Col>
-        )}
         <Col xs={24} md={8}>
           <Form.Item
             name="legalName"

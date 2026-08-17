@@ -33,6 +33,7 @@ const permissionCatalog = [
   ...Object.values(permissions.companyMembers),
   ...Object.values(permissions.companyRoles),
   ...Object.values(permissions.branches),
+  ...Object.values(permissions.warehouseCategories),
   'address_dictionaries.read',
   'economic_activities.read',
 ].map((code) => {
@@ -505,15 +506,6 @@ function RoleModal({ state, mutations, close, run, refresh }) {
           </Form.Item>
         ) : (
           <>
-            {!editing && (
-              <Form.Item
-                name="code"
-                label="Código"
-                rules={[{ required: true }]}
-              >
-                <Input />
-              </Form.Item>
-            )}
             <Form.Item name="name" label="Nombre" rules={[{ required: true }]}>
               <Input />
             </Form.Item>

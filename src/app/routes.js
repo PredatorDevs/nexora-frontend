@@ -6,6 +6,7 @@ export const routes = Object.freeze({
   companies: '/companies',
   companyAccess: '/company-access',
   branches: '/branches',
+  warehouseCategories: '/warehouse-categories',
   users: '/users',
   roles: '/roles',
   permissions: '/permissions',
