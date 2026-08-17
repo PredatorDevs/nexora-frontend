@@ -5,7 +5,7 @@ import { useAuth } from '@/auth/useAuth.js';
 import { routes } from '@/app/routes.js';
 
 export function RequireAuth() {
-  const { status, user, memberships = [], activeMembership = null } = useAuth();
+  const { status, user, requiresCompanySelection = false } = useAuth();
   const location = useLocation();
 
   if (status === 'loading') return <SessionLoading />;
@@ -18,8 +18,7 @@ export function RequireAuth() {
   if (
     !user.mustChangePassword &&
     location.pathname !== routes.selectCompany &&
-    !activeMembership &&
-    memberships.length > 0
+    requiresCompanySelection
   ) {
     return <Navigate to={routes.selectCompany} replace />;
   }
