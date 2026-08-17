@@ -39,6 +39,13 @@ export const navigationItems = Object.freeze([
     permission: permissions.warehouses.read,
   }),
   Object.freeze({
+    key: 'locations',
+    label: 'Ubicaciones',
+    path: routes.locations,
+    icon: 'home',
+    permission: permissions.locations.read,
+  }),
+  Object.freeze({
     key: 'home',
     label: 'Inicio',
     path: routes.home,

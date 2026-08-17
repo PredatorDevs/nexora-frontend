@@ -36,6 +36,12 @@ export const permissions = Object.freeze({
     update: 'warehouses.update',
     changeStatus: 'warehouses.change_status',
   }),
+  locations: Object.freeze({
+    read: 'locations.read',
+    create: 'locations.create',
+    update: 'locations.update',
+    changeStatus: 'locations.change_status',
+  }),
   users: Object.freeze({
     read: 'users.read',
     create: 'users.create',

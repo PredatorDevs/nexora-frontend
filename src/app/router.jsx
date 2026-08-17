@@ -16,6 +16,7 @@ import { companyAccessRoutes } from '@/modules/company-access/company-access.rou
 import { branchRoutes } from '@/modules/branches/branches.routes.jsx';
 import { warehouseCategoryRoutes } from '@/modules/warehouse-categories/warehouse-categories.routes.jsx';
 import { warehouseRoutes } from '@/modules/warehouses/warehouses.routes.jsx';
+import { locationRoutes } from '@/modules/locations/locations.routes.jsx';
 
 const loginPage = lazyRoute(
   () => import('@/modules/auth/pages/LoginPage.jsx'),
@@ -86,6 +87,7 @@ export const appRoutes = [
           ...branchRoutes,
           ...warehouseCategoryRoutes,
           ...warehouseRoutes,
+          ...locationRoutes,
         ],
       },
     ],
