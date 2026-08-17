@@ -21,6 +21,10 @@ export const queryKeys = Object.freeze({
     all: Object.freeze(['warehouse-categories']),
     list: (filters) => ['warehouse-categories', 'list', filters],
   }),
+  warehouses: Object.freeze({
+    all: Object.freeze(['warehouses']),
+    list: (filters) => ['warehouses', 'list', filters],
+  }),
   users: Object.freeze({
     all: Object.freeze(['users']),
     list: (filters) => ['users', 'list', filters],
