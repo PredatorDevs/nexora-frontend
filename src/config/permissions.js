@@ -55,6 +55,18 @@ export const permissions = Object.freeze({
     changeStatus: 'supplier_contacts.change_status',
     setPrimary: 'supplier_contacts.set_primary',
   }),
+  brands: Object.freeze({
+    read: 'brands.read',
+    create: 'brands.create',
+    update: 'brands.update',
+    changeStatus: 'brands.change_status',
+  }),
+  productCategories: Object.freeze({
+    read: 'product_categories.read',
+    create: 'product_categories.create',
+    update: 'product_categories.update',
+    changeStatus: 'product_categories.change_status',
+  }),
   users: Object.freeze({
     read: 'users.read',
     create: 'users.create',

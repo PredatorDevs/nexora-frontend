@@ -18,6 +18,7 @@ import { warehouseCategoryRoutes } from '@/modules/warehouse-categories/warehous
 import { warehouseRoutes } from '@/modules/warehouses/warehouses.routes.jsx';
 import { locationRoutes } from '@/modules/locations/locations.routes.jsx';
 import { supplierRoutes } from '@/modules/suppliers/suppliers.routes.jsx';
+import { productDictionaryRoutes } from '@/modules/product-dictionaries/product-dictionaries.routes.jsx';
 
 const loginPage = lazyRoute(
   () => import('@/modules/auth/pages/LoginPage.jsx'),
@@ -55,7 +56,9 @@ const notFoundPage = lazyRoute(
 export const appRoutes = [
   {
     element: <AuthLayout />,
-    children: [{ path: routes.acceptInvitation, element: acceptInvitationPage }],
+    children: [
+      { path: routes.acceptInvitation, element: acceptInvitationPage },
+    ],
   },
   {
     element: <RequireGuest />,
@@ -90,6 +93,7 @@ export const appRoutes = [
           ...warehouseRoutes,
           ...locationRoutes,
           ...supplierRoutes,
+          ...productDictionaryRoutes,
         ],
       },
     ],

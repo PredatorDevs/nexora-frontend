@@ -38,8 +38,11 @@ const permissionCatalog = [
   ...Object.values(permissions.locations),
   ...Object.values(permissions.suppliers),
   ...Object.values(permissions.supplierContacts),
+  ...Object.values(permissions.brands),
+  ...Object.values(permissions.productCategories),
   'address_dictionaries.read',
   'economic_activities.read',
+  'measurement_units.read',
 ].map((code) => {
   const [resource, action] = code.split('.');
   return { code, resource, action, description: null };
@@ -80,7 +83,9 @@ export function CompanyAccessManagementPage() {
       queryKey: ['company-access', companyId, 'invitations'],
     });
   const mutations = {
-    addMember: useMutation({ mutationFn: (v) => api.inviteMember(companyId, v) }),
+    addMember: useMutation({
+      mutationFn: (v) => api.inviteMember(companyId, v),
+    }),
     memberRoles: useMutation({
       mutationFn: ({ member, roleIds }) =>
         api.replaceMemberRoles(companyId, member.id, roleIds, member.updatedAt),
@@ -115,7 +120,9 @@ export function CompanyAccessManagementPage() {
     try {
       const result = await operation();
       await refresh();
-      message.success(typeof success === 'function' ? success(result) : success);
+      message.success(
+        typeof success === 'function' ? success(result) : success,
+      );
       close?.();
     } catch (error) {
       message.error(error.message);
@@ -237,7 +244,9 @@ export function CompanyAccessManagementPage() {
     {
       title: 'Roles',
       render: (_, invitation) =>
-        invitation.roles.map(({ role }) => <Tag key={role.id}>{role.name}</Tag>),
+        invitation.roles.map(({ role }) => (
+          <Tag key={role.id}>{role.name}</Tag>
+        )),
     },
     { title: 'Estado', dataIndex: 'status' },
     {
@@ -362,9 +371,14 @@ export function CompanyAccessManagementPage() {
             content: (
               <Space direction="vertical" style={{ width: '100%' }}>
                 <Typography.Paragraph>
-                  Comparte este enlace con la persona invitada. Expira en siete dÃ­as.
+                  Comparte este enlace con la persona invitada. Expira en siete
+                  dÃ­as.
                 </Typography.Paragraph>
-                <Input.TextArea readOnly value={invitation.acceptanceUrl} autoSize />
+                <Input.TextArea
+                  readOnly
+                  value={invitation.acceptanceUrl}
+                  autoSize
+                />
               </Space>
             ),
             width: 620,
@@ -382,7 +396,16 @@ export function CompanyAccessManagementPage() {
   );
 }
 
-function MemberModal({ state, roles, mutations, close, run, refresh, refreshInvitations, showInvitation }) {
+function MemberModal({
+  state,
+  roles,
+  mutations,
+  close,
+  run,
+  refresh,
+  refreshInvitations,
+  showInvitation,
+}) {
   if (!state) return null;
   const editing = state.type === 'roles';
   const initialValues = editing
@@ -422,8 +445,8 @@ function MemberModal({ state, roles, mutations, close, run, refresh, refreshInvi
         {!editing && (
           <>
             <Typography.Paragraph type="secondary">
-              Se creará una invitación segura. Si el correo no tiene cuenta,
-              la persona podrá crearla al aceptar.
+              Se creará una invitación segura. Si el correo no tiene cuenta, la
+              persona podrá crearla al aceptar.
             </Typography.Paragraph>
             <Form.Item
               name="email"
