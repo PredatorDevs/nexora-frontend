@@ -16,6 +16,7 @@ export const queryKeys = Object.freeze({
   branches: Object.freeze({
     all: Object.freeze(['branches']),
     list: (filters) => ['branches', 'list', filters],
+    detail: (id) => ['branches', 'detail', Number(id)],
   }),
   warehouseCategories: Object.freeze({
     all: Object.freeze(['warehouse-categories']),

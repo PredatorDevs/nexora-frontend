@@ -3,6 +3,9 @@ export async function listBranches(params) {
   const response = await apiClient.get('/branches', { params });
   return { branches: response.data, pagination: response.meta.pagination };
 }
+export async function getBranch(id) {
+  return (await apiClient.get(`/branches/${id}`)).data;
+}
 export async function createBranch(data) {
   return (await apiClient.post('/branches', data)).data;
 }
