@@ -67,6 +67,13 @@ export const navigationItems = Object.freeze([
     permission: permissions.productCategories.read,
   }),
   Object.freeze({
+    key: 'product-units',
+    label: 'Unidades comerciales',
+    path: routes.productUnits,
+    icon: 'home',
+    permission: permissions.productUnits.read,
+  }),
+  Object.freeze({
     key: 'home',
     label: 'Inicio',
     path: routes.home,

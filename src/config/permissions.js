@@ -67,6 +67,16 @@ export const permissions = Object.freeze({
     update: 'product_categories.update',
     changeStatus: 'product_categories.change_status',
   }),
+  productUnits: Object.freeze({
+    read: 'product_units.read',
+    create: 'product_units.create',
+    update: 'product_units.update',
+    changeStatus: 'product_units.change_status',
+  }),
+  files: Object.freeze({
+    read: 'files.read',
+    create: 'files.create',
+  }),
   users: Object.freeze({
     read: 'users.read',
     create: 'users.create',
