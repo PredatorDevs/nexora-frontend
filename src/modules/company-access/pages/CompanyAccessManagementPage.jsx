@@ -53,7 +53,7 @@ const permissionCatalog = [
 });
 
 export function CompanyAccessManagementPage() {
-  const { activeMembership } = useAuth();
+  const { activeMembership, refreshCompanyContext } = useAuth();
   const companyId = activeMembership?.companyId;
   const { message, modal: dialog } = App.useApp();
   const client = useQueryClient();
@@ -124,6 +124,7 @@ export function CompanyAccessManagementPage() {
     try {
       const result = await operation();
       await refresh();
+      await refreshCompanyContext();
       message.success(
         typeof success === 'function' ? success(result) : success,
       );
