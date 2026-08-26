@@ -6,6 +6,7 @@ import {
 } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  Alert,
   App,
   Button,
   Card,
@@ -13,8 +14,10 @@ import {
   Input,
   Modal,
   Space,
+  Spin,
   Tag,
 } from 'antd';
+import dayjs from 'dayjs';
 import { useCallback, useMemo, useState } from 'react';
 import { Can } from '@/components/authorization/Can.jsx';
 import { DataTable } from '@/components/tables/DataTable.jsx';
@@ -37,12 +40,18 @@ export function ProductListPage() {
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState(initialFilters);
   const [modal, setModal] = useState(null);
-  const [details, setDetails] = useState(null);
+  const [detailsId, setDetailsId] = useState(null);
   const [imageProduct, setImageProduct] = useState(null);
   const query = useQuery({
     queryKey: ['products', 'list', filters],
     queryFn: () => api.listProducts(filters),
   });
+  const detailsQuery = useQuery({
+    queryKey: ['products', 'detail', detailsId],
+    queryFn: () => api.getProduct(detailsId),
+    enabled: Boolean(detailsId),
+  });
+  const details = detailsQuery.data;
   const create = useMutation({ mutationFn: api.createProduct });
   const update = useMutation({
     mutationFn: ({ id, data }) => api.updateProduct(id, data),
@@ -105,10 +114,13 @@ export function ProductListPage() {
                 onClick={() => setImageProduct(product)}
               />
             </Can>
-            <Button
-              icon={<EyeOutlined />}
-              onClick={() => setDetails(product)}
-            />
+            <Can permission={permissions.products.read}>
+              <Button
+                icon={<EyeOutlined />}
+                aria-label={`Ver detalle de ${product.name}`}
+                onClick={() => setDetailsId(product.id)}
+              />
+            </Can>
             <Can permission={permissions.products.update}>
               <Button
                 icon={<EditOutlined />}
@@ -200,22 +212,53 @@ export function ProductListPage() {
         ) : null}
       </Modal>
       <Modal
-        title={details?.name}
-        open={Boolean(details)}
+        title={details?.name ?? 'Detalle del producto'}
+        open={Boolean(detailsId)}
         footer={null}
-        onCancel={() => setDetails(null)}
+        width={900}
+        onCancel={() => setDetailsId(null)}
+        destroyOnHidden
       >
-        {details ? (
-          <Descriptions column={1} bordered size="small">
+        {detailsQuery.isLoading ? (
+          <div style={{ display: 'grid', minHeight: 180, placeItems: 'center' }}>
+            <Spin />
+          </div>
+        ) : detailsQuery.isError ? (
+          <Alert
+            showIcon
+            type="error"
+            message="No fue posible cargar el producto."
+            description={detailsQuery.error.message}
+            action={
+              <Button onClick={() => detailsQuery.refetch()}>Reintentar</Button>
+            }
+          />
+        ) : details ? (
+          <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
+            <Descriptions.Item label="ID">{details.id}</Descriptions.Item>
+            <Descriptions.Item label="UUID">{details.uuid}</Descriptions.Item>
             <Descriptions.Item label="Código interno">
               {details.internalCode}
             </Descriptions.Item>
-            <Descriptions.Item label="UUID">{details.uuid}</Descriptions.Item>
             <Descriptions.Item label="SKU">
               {details.sku || '—'}
             </Descriptions.Item>
             <Descriptions.Item label="Código original">
               {details.originalCode || '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Estado">
+              <StatusBadge
+                status={details.isActive ? 'ACTIVE' : 'INACTIVE'}
+              />
+            </Descriptions.Item>
+            <Descriptions.Item label="Categoría">
+              {details.productCategory.parent?.name || '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Subcategoría">
+              {details.productCategory.name}
+            </Descriptions.Item>
+            <Descriptions.Item label="Marca">
+              {details.brand?.name || '—'}
             </Descriptions.Item>
             <Descriptions.Item label="Presentación">
               {details.presentation || '—'}
@@ -226,8 +269,32 @@ export function ProductListPage() {
             <Descriptions.Item label="Dimensiones">
               {details.dimensions || '—'}
             </Descriptions.Item>
-            <Descriptions.Item label="Descripción">
+            <Descriptions.Item label="Unidad de compra">
+              {details.purchaseUnit.name}
+              {details.purchaseUnit.measurementUnit?.symbol
+                ? ` (${details.purchaseUnit.measurementUnit.symbol})`
+                : ''}
+            </Descriptions.Item>
+            <Descriptions.Item label="Unidad de venta">
+              {details.saleUnit.name}
+              {details.saleUnit.measurementUnit?.symbol
+                ? ` (${details.saleUnit.measurementUnit.symbol})`
+                : ''}
+            </Descriptions.Item>
+            <Descriptions.Item
+              label="Unidades de venta por unidad de compra"
+              span={2}
+            >
+              {Number(details.purchaseToSaleFactor)}
+            </Descriptions.Item>
+            <Descriptions.Item label="Descripción" span={2}>
               {details.description || '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Creado">
+              {dayjs(details.createdAt).format('DD/MM/YYYY HH:mm')}
+            </Descriptions.Item>
+            <Descriptions.Item label="Última actualización">
+              {dayjs(details.updatedAt).format('DD/MM/YYYY HH:mm')}
             </Descriptions.Item>
           </Descriptions>
         ) : null}

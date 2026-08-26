@@ -5,6 +5,10 @@ export async function listProducts(params) {
   return { products: response.data, pagination: response.meta.pagination };
 }
 
+export async function getProduct(id) {
+  return (await apiClient.get(`/products/${id}`)).data;
+}
+
 export async function createProduct(data) {
   return (await apiClient.post('/products', data)).data;
 }
