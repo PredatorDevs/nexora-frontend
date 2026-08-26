@@ -5,6 +5,13 @@ import * as categoriesApi from '@/modules/warehouse-categories/warehouse-categor
 
 const listOptions = { page: 1, pageSize: 100, sortBy: 'name', sortOrder: 'asc' };
 const nullable = (value) => value?.trim() || null;
+const separatorOptions = [
+  { value: '/', label: '/ — Pleca' },
+  { value: '-', label: '- — Guion' },
+  { value: '.', label: '. — Punto' },
+  { value: '|', label: '| — Barra vertical' },
+  { value: '·', label: '· — Punto medio' },
+];
 
 export function WarehouseForm({ initialValues, isSubmitting, onCancel, onSubmit }) {
   const branches = useQuery({
@@ -30,7 +37,7 @@ export function WarehouseForm({ initialValues, isSubmitting, onCancel, onSubmit 
   return (
     <Form
       layout="vertical"
-      initialValues={initialValues ?? undefined}
+      initialValues={{ locationSeparator: '/', ...initialValues }}
       onFinish={(values) => onSubmit({ ...values, description: nullable(values.description) })}
     >
       <Form.Item name="branchId" label="Sucursal" rules={[{ required: true }]}>
@@ -44,6 +51,14 @@ export function WarehouseForm({ initialValues, isSubmitting, onCancel, onSubmit 
       </Form.Item>
       <Form.Item name="description" label="Descripción">
         <Input.TextArea maxLength={500} showCount rows={3} />
+      </Form.Item>
+      <Form.Item
+        name="locationSeparator"
+        label="Separador de ubicaciones"
+        rules={[{ required: true }]}
+        extra="Define cómo se mostrarán pasillo, estante, nivel y posición."
+      >
+        <Select options={separatorOptions} />
       </Form.Item>
       <Space>
         <Button onClick={onCancel}>Cancelar</Button>

@@ -13,6 +13,7 @@ import {
 } from 'antd';
 import * as branchesApi from '@/modules/branches/branches.api.js';
 import * as warehousesApi from '@/modules/warehouses/warehouses.api.js';
+import { joinLocationCoordinates } from '@/modules/locations/location-reference.js';
 
 const options = { page: 1, pageSize: 100, sortBy: 'name', sortOrder: 'asc' };
 const nullable = (value) => value?.trim() || null;
@@ -26,6 +27,7 @@ const capacityUnits = [
 export function LocationBulkForm({ isSubmitting, onCancel, onSubmit }) {
   const [form] = Form.useForm();
   const branchId = Form.useWatch('branchId', form);
+  const warehouseId = Form.useWatch('warehouseId', form);
   const levelCount = Form.useWatch('levelCount', form) ?? 0;
   const positionsPerLevel = Form.useWatch('positionsPerLevel', form) ?? 0;
   const capacity = Form.useWatch('capacity', form);
@@ -44,6 +46,9 @@ export function LocationBulkForm({ isSubmitting, onCancel, onSubmit }) {
     enabled: Boolean(branchId),
     staleTime: 300_000,
   });
+  const selectedWarehouse = warehouses.data?.warehouses.find(
+    (item) => item.id === warehouseId,
+  );
 
   return (
     <Form
@@ -66,7 +71,7 @@ export function LocationBulkForm({ isSubmitting, onCancel, onSubmit }) {
         type={total > 200 ? 'error' : 'info'}
         message={
           total > 0
-            ? `Se crearán ${total} ubicaciones${aisle && rack ? ` en ${aisle} / ${rack}` : ''}.`
+            ? `Se crearán ${total} ubicaciones${aisle && rack ? ` en ${joinLocationCoordinates([aisle, rack], selectedWarehouse?.locationSeparator)}` : ''}.`
             : 'Indica la cantidad de niveles y posiciones.'
         }
         description={

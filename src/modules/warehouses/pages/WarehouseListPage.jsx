@@ -57,6 +57,7 @@ export function WarehouseListPage() {
     { title: 'Nombre', dataIndex: 'name' },
     { title: 'Sucursal', render: (_, item) => item.branch?.name },
     { title: 'Categoría', render: (_, item) => item.warehouseCategory?.name },
+    { title: 'Separador', dataIndex: 'locationSeparator', align: 'center' },
     { title: 'Estado', dataIndex: 'isActive', render: (value) => <StatusBadge status={value ? 'ACTIVE' : 'INACTIVE'} /> },
     {
       title: 'Acciones',

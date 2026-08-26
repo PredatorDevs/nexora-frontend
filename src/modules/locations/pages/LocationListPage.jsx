@@ -12,6 +12,7 @@ import * as branchesApi from '@/modules/branches/branches.api.js';
 import { LocationForm } from '@/modules/locations/components/LocationForm.jsx';
 import { LocationBulkForm } from '@/modules/locations/components/LocationBulkForm.jsx';
 import * as api from '@/modules/locations/locations.api.js';
+import { formatLocationReference } from '@/modules/locations/location-reference.js';
 import * as warehousesApi from '@/modules/warehouses/warehouses.api.js';
 
 const baseFilters = {
@@ -116,8 +117,7 @@ export function LocationListPage() {
       { title: 'Almacén', render: (_, item) => item.warehouse?.name },
       {
         title: 'Referencia física',
-        render: (_, item) =>
-          `${item.aisle} / ${item.rack} / ${item.level} / ${item.position}`,
+        render: (_, item) => formatLocationReference(item),
       },
       {
         title: 'Capacidad',
