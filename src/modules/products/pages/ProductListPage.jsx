@@ -1,4 +1,9 @@
-import { EditOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
+import {
+  EditOutlined,
+  EyeOutlined,
+  PictureOutlined,
+  PlusOutlined,
+} from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   App,
@@ -17,6 +22,7 @@ import { PageHeader } from '@/components/ui/PageHeader.jsx';
 import { StatusBadge } from '@/components/ui/StatusBadge.jsx';
 import { permissions } from '@/config/permissions.js';
 import { ProductForm } from '../components/ProductForm.jsx';
+import { ProductImagesManager } from '../components/ProductImagesManager.jsx';
 import * as api from '../products.api.js';
 
 const initialFilters = {
@@ -32,6 +38,7 @@ export function ProductListPage() {
   const [filters, setFilters] = useState(initialFilters);
   const [modal, setModal] = useState(null);
   const [details, setDetails] = useState(null);
+  const [imageProduct, setImageProduct] = useState(null);
   const query = useQuery({
     queryKey: ['products', 'list', filters],
     queryFn: () => api.listProducts(filters),
@@ -92,6 +99,12 @@ export function ProductListPage() {
         title: 'Acciones',
         render: (_, product) => (
           <Space>
+            <Can permission={permissions.productImages.read}>
+              <Button
+                icon={<PictureOutlined />}
+                onClick={() => setImageProduct(product)}
+              />
+            </Can>
             <Button
               icon={<EyeOutlined />}
               onClick={() => setDetails(product)}
@@ -218,6 +231,16 @@ export function ProductListPage() {
             </Descriptions.Item>
           </Descriptions>
         ) : null}
+      </Modal>
+      <Modal
+        title={`Imágenes · ${imageProduct?.name ?? ''}`}
+        open={Boolean(imageProduct)}
+        footer={null}
+        width={960}
+        onCancel={() => setImageProduct(null)}
+        destroyOnHidden
+      >
+        {imageProduct ? <ProductImagesManager product={imageProduct} /> : null}
       </Modal>
     </>
   );
