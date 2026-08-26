@@ -7,7 +7,9 @@ const page = lazyRoute(
   () => import('@/modules/locations/pages/LocationListPage.jsx'),
   'LocationListPage',
 );
-export const locationRoutes = [{
-  element: <RequirePermission permission={permissions.locations.read} />,
-  children: [{ path: routes.locations, element: page }],
-}];
+export const locationRoutes = [
+  {
+    element: <RequirePermission permission={permissions.locations.read} />,
+    children: [{ path: routes.locations, element: page }],
+  },
+];

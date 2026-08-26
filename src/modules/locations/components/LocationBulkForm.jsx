@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import {
+  Alert,
   Button,
   Col,
   Form,
@@ -8,6 +9,7 @@ import {
   Row,
   Select,
   Space,
+  Typography,
 } from 'antd';
 import * as branchesApi from '@/modules/branches/branches.api.js';
 import * as warehousesApi from '@/modules/warehouses/warehouses.api.js';
@@ -21,44 +23,36 @@ const capacityUnits = [
   { value: 'PALLETS', label: 'Tarimas' },
 ];
 
-export function LocationForm({
-  initialValues,
-  isSubmitting,
-  onCancel,
-  onSubmit,
-}) {
+export function LocationBulkForm({ isSubmitting, onCancel, onSubmit }) {
   const [form] = Form.useForm();
   const branchId = Form.useWatch('branchId', form);
+  const levelCount = Form.useWatch('levelCount', form) ?? 0;
+  const positionsPerLevel = Form.useWatch('positionsPerLevel', form) ?? 0;
   const capacity = Form.useWatch('capacity', form);
   const capacityUnit = Form.useWatch('capacityUnit', form);
-  const editing = Boolean(initialValues);
+  const aisle = Form.useWatch('aisle', form)?.trim().toUpperCase();
+  const rack = Form.useWatch('rack', form)?.trim().toUpperCase();
+  const total = levelCount * positionsPerLevel;
   const branches = useQuery({
-    queryKey: ['branches', 'location-options'],
+    queryKey: ['branches', 'location-bulk-options'],
     queryFn: () => branchesApi.listBranches(options),
     staleTime: 300_000,
   });
   const warehouses = useQuery({
-    queryKey: ['warehouses', 'location-options', branchId],
+    queryKey: ['warehouses', 'location-bulk-options', branchId],
     queryFn: () => warehousesApi.listWarehouses({ ...options, branchId }),
     enabled: Boolean(branchId),
     staleTime: 300_000,
   });
+
   return (
     <Form
       form={form}
       layout="vertical"
-      initialValues={{
-        ...initialValues,
-        branchId: initialValues?.warehouse?.branchId,
-        capacity:
-          initialValues?.capacity == null
-            ? null
-            : Number(initialValues.capacity),
-      }}
+      initialValues={{ levelCount: 1, positionsPerLevel: 1 }}
       onFinish={(values) => {
         const payload = { ...values };
         delete payload.branchId;
-        if (editing) delete payload.warehouseId;
         onSubmit({
           ...payload,
           capacity: payload.capacity ?? null,
@@ -67,6 +61,21 @@ export function LocationForm({
         });
       }}
     >
+      <Alert
+        showIcon
+        type={total > 200 ? 'error' : 'info'}
+        message={
+          total > 0
+            ? `Se crearán ${total} ubicaciones${aisle && rack ? ` en ${aisle} / ${rack}` : ''}.`
+            : 'Indica la cantidad de niveles y posiciones.'
+        }
+        description={
+          total > 0 && total <= 200
+            ? `Desde nivel 1, posición 1 hasta nivel ${levelCount}, posición ${positionsPerLevel}. Máximo 200 por operación.`
+            : 'El lote no puede superar 200 ubicaciones.'
+        }
+        style={{ marginBottom: 16 }}
+      />
       <Row gutter={16}>
         <Col xs={24} md={12}>
           <Form.Item
@@ -75,7 +84,6 @@ export function LocationForm({
             rules={[{ required: true }]}
           >
             <Select
-              disabled={editing}
               showSearch
               optionFilterProp="label"
               loading={branches.isLoading}
@@ -95,7 +103,7 @@ export function LocationForm({
             rules={[{ required: true }]}
           >
             <Select
-              disabled={editing || !branchId}
+              disabled={!branchId}
               showSearch
               optionFilterProp="label"
               loading={warehouses.isLoading}
@@ -107,28 +115,67 @@ export function LocationForm({
             />
           </Form.Item>
         </Col>
-        {['aisle', 'rack', 'level', 'position'].map((name) => (
-          <Col xs={24} md={6} key={name}>
-            <Form.Item
-              name={name}
-              label={
-                {
-                  aisle: 'Pasillo',
-                  rack: 'Estante',
-                  level: 'Nivel',
-                  position: 'Posición',
-                }[name]
-              }
-              rules={[{ required: true }]}
-            >
-              <Input maxLength={50} />
-            </Form.Item>
-          </Col>
-        ))}
+        <Col xs={24} md={12}>
+          <Form.Item
+            name="aisle"
+            label="Pasillo"
+            rules={[{ required: true, whitespace: true }]}
+          >
+            <Input maxLength={50} />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            name="rack"
+            label="Estante"
+            rules={[{ required: true, whitespace: true }]}
+          >
+            <Input maxLength={50} />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            name="levelCount"
+            label="Cantidad de niveles"
+            rules={[{ required: true }, { type: 'number', min: 1, max: 50 }]}
+          >
+            <InputNumber
+              min={1}
+              max={50}
+              precision={0}
+              style={{ width: '100%' }}
+            />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            name="positionsPerLevel"
+            label="Posiciones por nivel"
+            rules={[
+              { required: true },
+              { type: 'number', min: 1, max: 100 },
+              {
+                validator: () =>
+                  total <= 200
+                    ? Promise.resolve()
+                    : Promise.reject(
+                        new Error('El lote no puede superar 200 ubicaciones.'),
+                      ),
+              },
+            ]}
+          >
+            <InputNumber
+              min={1}
+              max={100}
+              precision={0}
+              style={{ width: '100%' }}
+            />
+          </Form.Item>
+        </Col>
         <Col xs={24} md={12}>
           <Form.Item
             name="capacity"
-            label="Capacidad"
+            label="Capacidad de cada ubicación"
             rules={[
               {
                 type: 'number',
@@ -156,15 +203,24 @@ export function LocationForm({
           </Form.Item>
         </Col>
         <Col span={24}>
-          <Form.Item name="notes" label="Observaciones">
+          <Form.Item name="notes" label="Observaciones compartidas">
             <Input.TextArea rows={3} maxLength={5000} showCount />
           </Form.Item>
         </Col>
       </Row>
+      <Typography.Paragraph type="secondary">
+        Los códigos internos se generarán automáticamente y cada ubicación podrá
+        editarse individualmente después.
+      </Typography.Paragraph>
       <Space>
         <Button onClick={onCancel}>Cancelar</Button>
-        <Button type="primary" htmlType="submit" loading={isSubmitting}>
-          Guardar ubicación
+        <Button
+          type="primary"
+          htmlType="submit"
+          loading={isSubmitting}
+          disabled={total < 1 || total > 200}
+        >
+          Crear {total || 0} ubicaciones
         </Button>
       </Space>
     </Form>

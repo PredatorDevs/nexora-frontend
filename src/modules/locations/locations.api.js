@@ -7,9 +7,17 @@ export async function listLocations(params) {
 export async function createLocation(data) {
   return (await apiClient.post('/locations', data)).data;
 }
+export async function createLocationsBulk(data) {
+  return (await apiClient.post('/locations/bulk', data)).data;
+}
 export async function updateLocation(id, data) {
   return (await apiClient.put(`/locations/${id}`, data)).data;
 }
 export async function changeLocationStatus(id, isActive, expectedUpdatedAt) {
-  return (await apiClient.patch(`/locations/${id}/status`, { isActive, expectedUpdatedAt })).data;
+  return (
+    await apiClient.patch(`/locations/${id}/status`, {
+      isActive,
+      expectedUpdatedAt,
+    })
+  ).data;
 }
