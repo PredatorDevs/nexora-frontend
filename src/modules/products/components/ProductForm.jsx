@@ -16,6 +16,7 @@ import {
   productCategoriesApi,
 } from '@/modules/product-dictionaries/product-dictionaries.api.js';
 import { listProductUnits } from '@/modules/product-units/product-units.api.js';
+import { productFormInitialValues } from '../product-form-values.js';
 
 const listParams = {
   page: 1,
@@ -73,11 +74,7 @@ export function ProductForm({
     <Form
       form={form}
       layout="vertical"
-      initialValues={
-        initialValues
-          ? { ...initialValues, categoryId: initialCategoryId }
-          : { purchaseToSaleFactor: 1 }
-      }
+      initialValues={productFormInitialValues(initialValues)}
       onFinish={(values) => {
         const data = { ...values };
         delete data.categoryId;
