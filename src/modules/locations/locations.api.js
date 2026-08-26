@@ -4,6 +4,9 @@ export async function listLocations(params) {
   const response = await apiClient.get('/locations', { params });
   return { locations: response.data, pagination: response.meta.pagination };
 }
+export async function getLocation(id) {
+  return (await apiClient.get(`/locations/${id}`)).data;
+}
 export async function createLocation(data) {
   return (await apiClient.post('/locations', data)).data;
 }

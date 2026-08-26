@@ -1,6 +1,18 @@
-import { EditOutlined, PlusOutlined } from '@ant-design/icons';
+import { EditOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { App, Button, Card, Modal, Select, Space, Tabs } from 'antd';
+import {
+  Alert,
+  App,
+  Button,
+  Card,
+  Descriptions,
+  Modal,
+  Select,
+  Space,
+  Spin,
+  Tabs,
+} from 'antd';
+import dayjs from 'dayjs';
 import { useCallback, useMemo, useState } from 'react';
 import { queryKeys } from '@/api/query-keys.js';
 import { Can } from '@/components/authorization/Can.jsx';
@@ -21,10 +33,17 @@ const baseFilters = {
   sortBy: 'code',
   sortOrder: 'asc',
 };
+const capacityUnitLabels = {
+  UNITS: 'Unidades',
+  KG: 'Kilogramos',
+  M3: 'Metros cúbicos',
+  PALLETS: 'Tarimas',
+};
 export function LocationListPage() {
   const { message, modal: dialog } = App.useApp();
   const client = useQueryClient();
   const [modal, setModal] = useState(null);
+  const [detailsId, setDetailsId] = useState(null);
   const [branchId, setBranchId] = useState();
   const [warehouseId, setWarehouseId] = useState();
   const filters = useMemo(
@@ -55,6 +74,12 @@ export function LocationListPage() {
     queryKey: queryKeys.locations.list(filters),
     queryFn: () => api.listLocations(filters),
   });
+  const detailsQuery = useQuery({
+    queryKey: queryKeys.locations.detail(detailsId),
+    queryFn: () => api.getLocation(detailsId),
+    enabled: Boolean(detailsId),
+  });
+  const details = detailsQuery.data;
   const create = useMutation({ mutationFn: api.createLocation });
   const createBulk = useMutation({ mutationFn: api.createLocationsBulk });
   const update = useMutation({
@@ -135,6 +160,13 @@ export function LocationListPage() {
         title: 'Acciones',
         render: (_, location) => (
           <Space>
+            <Can permission={permissions.locations.read}>
+              <Button
+                icon={<EyeOutlined />}
+                aria-label={`Ver detalle de ${location.code}`}
+                onClick={() => setDetailsId(location.id)}
+              />
+            </Can>
             <Can permission={permissions.locations.update}>
               <Button
                 icon={<EditOutlined />}
@@ -276,6 +308,67 @@ export function LocationListPage() {
             onCancel={() => setModal(null)}
             onSubmit={submit}
           />
+        ) : null}
+      </Modal>
+      <Modal
+        title={details ? `Ubicación ${details.code}` : 'Detalle de la ubicación'}
+        open={Boolean(detailsId)}
+        footer={null}
+        width={860}
+        onCancel={() => setDetailsId(null)}
+        destroyOnHidden
+      >
+        {detailsQuery.isLoading ? (
+          <div style={{ display: 'grid', minHeight: 180, placeItems: 'center' }}>
+            <Spin />
+          </div>
+        ) : detailsQuery.isError ? (
+          <Alert
+            showIcon
+            type="error"
+            message="No fue posible cargar la ubicación."
+            description={detailsQuery.error.message}
+            action={<Button onClick={() => detailsQuery.refetch()}>Reintentar</Button>}
+          />
+        ) : details ? (
+          <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
+            <Descriptions.Item label="ID">{details.id}</Descriptions.Item>
+            <Descriptions.Item label="Código">{details.code}</Descriptions.Item>
+            <Descriptions.Item label="Estado">
+              <StatusBadge status={details.isActive ? 'ACTIVE' : 'INACTIVE'} />
+            </Descriptions.Item>
+            <Descriptions.Item label="Separador">
+              {details.warehouse.locationSeparator}
+            </Descriptions.Item>
+            <Descriptions.Item label="Sucursal" span={2}>
+              {details.warehouse.branch.code} — {details.warehouse.branch.name}
+            </Descriptions.Item>
+            <Descriptions.Item label="Almacén" span={2}>
+              {details.warehouse.code} — {details.warehouse.name}
+            </Descriptions.Item>
+            <Descriptions.Item label="Referencia física" span={2}>
+              {formatLocationReference(details)}
+            </Descriptions.Item>
+            <Descriptions.Item label="Pasillo">{details.aisle}</Descriptions.Item>
+            <Descriptions.Item label="Estante">{details.rack}</Descriptions.Item>
+            <Descriptions.Item label="Nivel">{details.level}</Descriptions.Item>
+            <Descriptions.Item label="Posición">{details.position}</Descriptions.Item>
+            <Descriptions.Item label="Capacidad">
+              {details.capacity ?? '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Unidad de capacidad">
+              {capacityUnitLabels[details.capacityUnit] ?? '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Observaciones" span={2}>
+              {details.notes ?? '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Creada">
+              {dayjs(details.createdAt).format('DD/MM/YYYY HH:mm')}
+            </Descriptions.Item>
+            <Descriptions.Item label="Última actualización">
+              {dayjs(details.updatedAt).format('DD/MM/YYYY HH:mm')}
+            </Descriptions.Item>
+          </Descriptions>
         ) : null}
       </Modal>
     </>
