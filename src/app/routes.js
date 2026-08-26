@@ -13,6 +13,7 @@ export const routes = Object.freeze({
   brands: '/brands',
   productCategories: '/product-categories',
   productUnits: '/product-units',
+  products: '/products',
   users: '/users',
   roles: '/roles',
   permissions: '/permissions',
