@@ -4,6 +4,9 @@ export async function listWarehouses(params) {
   const response = await apiClient.get('/warehouses', { params });
   return { warehouses: response.data, pagination: response.meta.pagination };
 }
+export async function getWarehouse(id) {
+  return (await apiClient.get(`/warehouses/${id}`)).data;
+}
 export async function createWarehouse(data) {
   return (await apiClient.post('/warehouses', data)).data;
 }
