@@ -1,6 +1,7 @@
-import { EditOutlined, PlusOutlined } from '@ant-design/icons';
+import { EditOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { App, Button, Card, Modal, Space } from 'antd';
+import { Alert, App, Button, Card, Descriptions, Modal, Space, Spin } from 'antd';
+import dayjs from 'dayjs';
 import { useCallback, useMemo, useState } from 'react';
 import { queryKeys } from '@/api/query-keys.js';
 import { Can } from '@/components/authorization/Can.jsx';
@@ -17,10 +18,17 @@ export function WarehouseCategoryListPage() {
   const { message } = App.useApp();
   const client = useQueryClient();
   const [modal, setModal] = useState(null);
+  const [detailsId, setDetailsId] = useState(null);
   const query = useQuery({
     queryKey: queryKeys.warehouseCategories.list(filters),
     queryFn: () => api.listWarehouseCategories(filters),
   });
+  const detailsQuery = useQuery({
+    queryKey: queryKeys.warehouseCategories.detail(detailsId),
+    queryFn: () => api.getWarehouseCategory(detailsId),
+    enabled: Boolean(detailsId),
+  });
+  const details = detailsQuery.data;
   const create = useMutation({ mutationFn: api.createWarehouseCategory });
   const update = useMutation({ mutationFn: ({ id, data }) => api.updateWarehouseCategory(id, data) });
   const status = useMutation({
@@ -59,6 +67,13 @@ export function WarehouseCategoryListPage() {
       title: 'Acciones',
       render: (_, category) => (
         <Space>
+          <Can permission={permissions.warehouseCategories.read}>
+            <Button
+              icon={<EyeOutlined />}
+              aria-label={`Ver detalle de ${category.name}`}
+              onClick={() => setDetailsId(category.id)}
+            />
+          </Can>
           <Can permission={permissions.warehouseCategories.update}>
             <Button icon={<EditOutlined />} aria-label={`Editar ${category.name}`} onClick={() => setModal(category)} />
           </Can>
@@ -122,6 +137,45 @@ export function WarehouseCategoryListPage() {
             onCancel={() => setModal(null)}
             onSubmit={submit}
           />
+        ) : null}
+      </Modal>
+      <Modal
+        title={details?.name ?? 'Detalle de la categoría de almacén'}
+        open={Boolean(detailsId)}
+        footer={null}
+        width={760}
+        onCancel={() => setDetailsId(null)}
+        destroyOnHidden
+      >
+        {detailsQuery.isLoading ? (
+          <div style={{ display: 'grid', minHeight: 160, placeItems: 'center' }}>
+            <Spin />
+          </div>
+        ) : detailsQuery.isError ? (
+          <Alert
+            showIcon
+            type="error"
+            message="No fue posible cargar la categoría de almacén."
+            description={detailsQuery.error.message}
+            action={<Button onClick={() => detailsQuery.refetch()}>Reintentar</Button>}
+          />
+        ) : details ? (
+          <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
+            <Descriptions.Item label="ID">{details.id}</Descriptions.Item>
+            <Descriptions.Item label="Código">{details.code}</Descriptions.Item>
+            <Descriptions.Item label="Estado" span={2}>
+              <StatusBadge status={details.isActive ? 'ACTIVE' : 'INACTIVE'} />
+            </Descriptions.Item>
+            <Descriptions.Item label="Descripción" span={2}>
+              {details.description ?? '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Creada">
+              {dayjs(details.createdAt).format('DD/MM/YYYY HH:mm')}
+            </Descriptions.Item>
+            <Descriptions.Item label="Última actualización">
+              {dayjs(details.updatedAt).format('DD/MM/YYYY HH:mm')}
+            </Descriptions.Item>
+          </Descriptions>
         ) : null}
       </Modal>
     </>

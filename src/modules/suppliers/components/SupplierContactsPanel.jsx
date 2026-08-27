@@ -1,6 +1,7 @@
-import { EditOutlined, PlusOutlined, StarFilled, StarOutlined } from '@ant-design/icons';
+import { EditOutlined, EyeOutlined, PlusOutlined, StarFilled, StarOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { App, Button, Modal, Space, Table, Tag } from 'antd';
+import { Alert, App, Button, Descriptions, Modal, Space, Spin, Table, Tag } from 'antd';
+import dayjs from 'dayjs';
 import { useCallback, useState } from 'react';
 import { queryKeys } from '@/api/query-keys.js';
 import { Can } from '@/components/authorization/Can.jsx';
@@ -14,10 +15,17 @@ export function SupplierContactsPanel({ supplier }) {
   const { message } = App.useApp();
   const client = useQueryClient();
   const [editor, setEditor] = useState(null);
+  const [detailsId, setDetailsId] = useState(null);
   const query = useQuery({
     queryKey: queryKeys.suppliers.contacts(supplier.id, filters),
     queryFn: () => api.listSupplierContacts(supplier.id, filters),
   });
+  const detailsQuery = useQuery({
+    queryKey: queryKeys.suppliers.contactDetail(supplier.id, detailsId),
+    queryFn: () => api.getSupplierContact(supplier.id, detailsId),
+    enabled: Boolean(detailsId),
+  });
+  const details = detailsQuery.data;
   const create = useMutation({ mutationFn: (data) => api.createSupplierContact(supplier.id, data) });
   const update = useMutation({ mutationFn: ({ id, data }) => api.updateSupplierContact(supplier.id, id, data) });
   const status = useMutation({ mutationFn: ({ contact, next }) => api.changeSupplierContactStatus(supplier.id, contact.id, next, contact.updatedAt) });
@@ -53,6 +61,9 @@ export function SupplierContactsPanel({ supplier }) {
     {
       title: 'Acciones',
       render: (_, contact) => <Space>
+        <Can permission={permissions.supplierContacts.read}>
+          <Button icon={<EyeOutlined />} aria-label={`Ver detalle de ${contact.fullName}`} onClick={() => setDetailsId(contact.id)} />
+        </Can>
         <Can permission={permissions.supplierContacts.update}>
           <Button icon={<EditOutlined />} aria-label={`Editar ${contact.fullName}`} onClick={() => setEditor(contact)} />
         </Can>
@@ -93,6 +104,28 @@ export function SupplierContactsPanel({ supplier }) {
     <Table rowKey="id" columns={columns} dataSource={query.data?.contacts} loading={query.isLoading} pagination={false} />
     <Modal title={editor === 'create' ? 'Nuevo contacto' : 'Editar contacto'} open={Boolean(editor)} footer={null} onCancel={() => setEditor(null)} destroyOnHidden>
       {editor ? <SupplierContactForm key={editor === 'create' ? 'create' : editor.id} initialValues={editor === 'create' ? null : editor} isSubmitting={create.isPending || update.isPending} onCancel={() => setEditor(null)} onSubmit={submit} /> : null}
+    </Modal>
+    <Modal title={details?.fullName ?? 'Detalle del contacto'} open={Boolean(detailsId)} footer={null} width={760} onCancel={() => setDetailsId(null)} destroyOnHidden>
+      {detailsQuery.isLoading ? (
+        <div style={{ display: 'grid', minHeight: 160, placeItems: 'center' }}><Spin /></div>
+      ) : detailsQuery.isError ? (
+        <Alert showIcon type="error" message="No fue posible cargar el contacto." description={detailsQuery.error.message} action={<Button onClick={() => detailsQuery.refetch()}>Reintentar</Button>} />
+      ) : details ? (
+        <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
+          <Descriptions.Item label="ID">{details.id}</Descriptions.Item>
+          <Descriptions.Item label="Tipo">{details.isPrimary ? <Tag color="gold" icon={<StarFilled />}>Principal</Tag> : 'Contacto adicional'}</Descriptions.Item>
+          <Descriptions.Item label="Cargo">{details.jobTitle ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Departamento / Área">{details.department ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Teléfono">{details.phone ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Correo electrónico">{details.email ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Estado"><StatusBadge status={details.isActive ? 'ACTIVE' : 'INACTIVE'} /></Descriptions.Item>
+          <Descriptions.Item label="Válido desde">{details.validFrom ? dayjs(details.validFrom).format('DD/MM/YYYY') : '—'}</Descriptions.Item>
+          <Descriptions.Item label="Válido hasta">{details.validUntil ? dayjs(details.validUntil).format('DD/MM/YYYY') : 'Vigencia abierta'}</Descriptions.Item>
+          <Descriptions.Item label="Notas" span={2}>{details.notes ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Creado">{dayjs(details.createdAt).format('DD/MM/YYYY HH:mm')}</Descriptions.Item>
+          <Descriptions.Item label="Última actualización">{dayjs(details.updatedAt).format('DD/MM/YYYY HH:mm')}</Descriptions.Item>
+        </Descriptions>
+      ) : null}
     </Modal>
   </>;
 }

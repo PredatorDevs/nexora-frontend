@@ -21,6 +21,7 @@ export const queryKeys = Object.freeze({
   warehouseCategories: Object.freeze({
     all: Object.freeze(['warehouse-categories']),
     list: (filters) => ['warehouse-categories', 'list', filters],
+    detail: (id) => ['warehouse-categories', 'detail', Number(id)],
   }),
   warehouses: Object.freeze({
     all: Object.freeze(['warehouses']),
@@ -35,8 +36,15 @@ export const queryKeys = Object.freeze({
   suppliers: Object.freeze({
     all: Object.freeze(['suppliers']),
     list: (filters) => ['suppliers', 'list', filters],
+    detail: (id) => ['suppliers', 'detail', Number(id)],
     contactsAll: (supplierId) => ['suppliers', Number(supplierId), 'contacts'],
     contacts: (supplierId, filters) => ['suppliers', Number(supplierId), 'contacts', filters],
+    contactDetail: (supplierId, contactId) => [
+      'suppliers',
+      Number(supplierId),
+      'contacts',
+      Number(contactId),
+    ],
   }),
   users: Object.freeze({
     all: Object.freeze(['users']),

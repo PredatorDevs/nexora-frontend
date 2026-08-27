@@ -4,6 +4,9 @@ export async function listSuppliers(params) {
   const response = await apiClient.get('/suppliers', { params });
   return { suppliers: response.data, pagination: response.meta.pagination };
 }
+export async function getSupplier(id) {
+  return (await apiClient.get(`/suppliers/${id}`)).data;
+}
 export async function createSupplier(data) {
   return (await apiClient.post('/suppliers', data)).data;
 }
@@ -16,6 +19,9 @@ export async function changeSupplierStatus(id, isActive, expectedUpdatedAt) {
 export async function listSupplierContacts(supplierId, params) {
   const response = await apiClient.get(`/suppliers/${supplierId}/contacts`, { params });
   return { contacts: response.data, pagination: response.meta.pagination };
+}
+export async function getSupplierContact(supplierId, contactId) {
+  return (await apiClient.get(`/suppliers/${supplierId}/contacts/${contactId}`)).data;
 }
 export async function createSupplierContact(supplierId, data) {
   return (await apiClient.post(`/suppliers/${supplierId}/contacts`, data)).data;

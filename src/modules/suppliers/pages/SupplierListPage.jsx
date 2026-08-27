@@ -1,6 +1,7 @@
-import { ContactsOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
+import { ContactsOutlined, EditOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { App, Button, Card, Modal, Space } from 'antd';
+import { Alert, App, Button, Card, Descriptions, Modal, Space, Spin } from 'antd';
+import dayjs from 'dayjs';
 import { useCallback, useMemo, useState } from 'react';
 import { queryKeys } from '@/api/query-keys.js';
 import { Can } from '@/components/authorization/Can.jsx';
@@ -17,8 +18,15 @@ export function SupplierListPage() {
   const { message } = App.useApp();
   const client = useQueryClient();
   const [editor, setEditor] = useState(null);
+  const [detailsId, setDetailsId] = useState(null);
   const [contactsSupplier, setContactsSupplier] = useState(null);
   const query = useQuery({ queryKey: queryKeys.suppliers.list(filters), queryFn: () => api.listSuppliers(filters) });
+  const detailsQuery = useQuery({
+    queryKey: queryKeys.suppliers.detail(detailsId),
+    queryFn: () => api.getSupplier(detailsId),
+    enabled: Boolean(detailsId),
+  });
+  const details = detailsQuery.data;
   const create = useMutation({ mutationFn: api.createSupplier });
   const update = useMutation({ mutationFn: ({ id, data }) => api.updateSupplier(id, data) });
   const status = useMutation({ mutationFn: ({ supplier, next }) => api.changeSupplierStatus(supplier.id, next, supplier.updatedAt) });
@@ -49,6 +57,9 @@ export function SupplierListPage() {
     {
       title: 'Acciones',
       render: (_, supplier) => <Space>
+        <Can permission={permissions.suppliers.read}>
+          <Button icon={<EyeOutlined />} aria-label={`Ver detalle de ${supplier.name}`} onClick={() => setDetailsId(supplier.id)} />
+        </Can>
         <Can permission={permissions.suppliers.update}>
           <Button icon={<EditOutlined />} aria-label={`Editar ${supplier.name}`} onClick={() => setEditor(supplier)} />
         </Can>
@@ -81,6 +92,40 @@ export function SupplierListPage() {
     </Modal>
     <Modal title={contactsSupplier ? `Contactos — ${contactsSupplier.name}` : 'Contactos'} open={Boolean(contactsSupplier)} footer={null} width={1100} onCancel={() => setContactsSupplier(null)} destroyOnHidden>
       {contactsSupplier ? <SupplierContactsPanel supplier={contactsSupplier} /> : null}
+    </Modal>
+    <Modal
+      title={details?.name ?? 'Detalle del proveedor'}
+      open={Boolean(detailsId)}
+      footer={null}
+      width={900}
+      onCancel={() => setDetailsId(null)}
+      destroyOnHidden
+    >
+      {detailsQuery.isLoading ? (
+        <div style={{ display: 'grid', minHeight: 180, placeItems: 'center' }}><Spin /></div>
+      ) : detailsQuery.isError ? (
+        <Alert showIcon type="error" message="No fue posible cargar el proveedor." description={detailsQuery.error.message} action={<Button onClick={() => detailsQuery.refetch()}>Reintentar</Button>} />
+      ) : details ? (
+        <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
+          <Descriptions.Item label="ID">{details.id}</Descriptions.Item>
+          <Descriptions.Item label="Código">{details.code}</Descriptions.Item>
+          <Descriptions.Item label="NIT / Identificación fiscal">{details.nit ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="NRC / Registro fiscal">{details.nrc ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Estado"><StatusBadge status={details.isActive ? 'ACTIVE' : 'INACTIVE'} /></Descriptions.Item>
+          <Descriptions.Item label="País">{details.country?.name ?? '—'}{details.country?.abbreviation ? ` (${details.country.abbreviation})` : ''}</Descriptions.Item>
+          <Descriptions.Item label="Departamento">{details.department?.name ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Municipio">{details.municipality?.name ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Distrito">{details.district?.name ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Área administrativa extranjera">{details.foreignAdministrativeArea ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Localidad extranjera">{details.foreignLocality ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Dirección" span={2}>{details.addressLine}</Descriptions.Item>
+          <Descriptions.Item label="Teléfono">{details.phone ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Correo electrónico">{details.email ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Sitio web" span={2}>{details.website ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Creado">{dayjs(details.createdAt).format('DD/MM/YYYY HH:mm')}</Descriptions.Item>
+          <Descriptions.Item label="Última actualización">{dayjs(details.updatedAt).format('DD/MM/YYYY HH:mm')}</Descriptions.Item>
+        </Descriptions>
+      ) : null}
     </Modal>
   </>;
 }
