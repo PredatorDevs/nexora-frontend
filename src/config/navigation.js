@@ -95,6 +95,13 @@ export const navigationItems = Object.freeze([
     permission: permissions.expenseTypes.read,
   }),
   Object.freeze({
+    key: 'purchase-quotations',
+    label: 'Cotizaciones de compra',
+    path: routes.purchaseQuotations,
+    icon: 'home',
+    permission: permissions.purchaseQuotations.read,
+  }),
+  Object.freeze({
     key: 'home',
     label: 'Inicio',
     path: routes.home,

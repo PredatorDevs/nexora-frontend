@@ -100,6 +100,17 @@ export const permissions = Object.freeze({
     update: 'expense_types.update',
     changeStatus: 'expense_types.change_status',
   }),
+  purchaseQuotations: Object.freeze({
+    read: 'purchase_quotations.read',
+    create: 'purchase_quotations.create',
+    update: 'purchase_quotations.update',
+    receive: 'purchase_quotations.receive',
+    review: 'purchase_quotations.review',
+    cancel: 'purchase_quotations.cancel',
+    expire: 'purchase_quotations.expire',
+    select: 'purchase_quotations.select',
+    reject: 'purchase_quotations.reject',
+  }),
   files: Object.freeze({
     read: 'files.read',
     create: 'files.create',
