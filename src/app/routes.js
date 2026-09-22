@@ -14,6 +14,7 @@ export const routes = Object.freeze({
   productCategories: '/product-categories',
   productUnits: '/product-units',
   products: '/products',
+  purchaseRequests: '/purchase-requests',
   users: '/users',
   roles: '/roles',
   permissions: '/permissions',

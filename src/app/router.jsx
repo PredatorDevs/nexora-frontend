@@ -21,6 +21,7 @@ import { supplierRoutes } from '@/modules/suppliers/suppliers.routes.jsx';
 import { productDictionaryRoutes } from '@/modules/product-dictionaries/product-dictionaries.routes.jsx';
 import { productUnitRoutes } from '@/modules/product-units/product-units.routes.jsx';
 import { productRoutes } from '@/modules/products/products.routes.jsx';
+import { purchaseRequestRoutes } from '@/modules/purchase-requests/purchase-requests.routes.jsx';
 
 const loginPage = lazyRoute(
   () => import('@/modules/auth/pages/LoginPage.jsx'),
@@ -98,6 +99,7 @@ export const appRoutes = [
           ...productDictionaryRoutes,
           ...productUnitRoutes,
           ...productRoutes,
+          ...purchaseRequestRoutes,
         ],
       },
     ],
