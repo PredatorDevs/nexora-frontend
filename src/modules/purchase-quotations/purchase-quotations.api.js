@@ -23,6 +23,14 @@ export async function replacePurchaseQuotationRequestLinks(item, links) {
     })
   ).data;
 }
+export async function replacePurchaseQuotationExpenses(item, expenses) {
+  return (
+    await apiClient.put(`/purchase-quotations/${item.id}/expenses`, {
+      expectedUpdatedAt: item.updatedAt,
+      expenses,
+    })
+  ).data;
+}
 export async function transitionPurchaseQuotation(item, action, reason) {
   return (
     await apiClient.post(`/purchase-quotations/${item.id}/${action}`, {

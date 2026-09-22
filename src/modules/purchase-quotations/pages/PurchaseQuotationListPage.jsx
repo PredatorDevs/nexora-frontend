@@ -21,7 +21,9 @@ import { PageHeader } from '@/components/ui/PageHeader.jsx';
 import { permissions } from '@/config/permissions.js';
 import { PurchaseQuotationForm } from '../components/PurchaseQuotationForm.jsx';
 import { PurchaseQuotationRequestLinksForm } from '../components/PurchaseQuotationRequestLinksForm.jsx';
+import { PurchaseQuotationExpensesForm } from '../components/PurchaseQuotationExpensesForm.jsx';
 import { listPurchaseRequests } from '@/modules/purchase-requests/purchase-requests.api.js';
+import { listExpenseTypes } from '@/modules/expense-types/expense-types.api.js';
 import * as api from '../purchase-quotations.api.js';
 const filters = {
   page: 1,
@@ -54,6 +56,7 @@ export function PurchaseQuotationListPage() {
     client = useQueryClient();
   const [editing, setEditing] = useState(null),
     [linking, setLinking] = useState(null),
+    [expensing, setExpensing] = useState(null),
     [detailsId, setDetailsId] = useState(null),
     [status, setStatus] = useState();
   const query = useQuery({
@@ -83,6 +86,18 @@ export function PurchaseQuotationListPage() {
     },
     enabled: Boolean(linking),
   });
+  const expenseTypes = useQuery({
+    queryKey: ['expense-types', 'active-for-quotation'],
+    queryFn: () =>
+      listExpenseTypes({
+        page: 1,
+        pageSize: 100,
+        sortBy: 'name',
+        sortOrder: 'asc',
+        isActive: true,
+      }),
+    enabled: Boolean(expensing),
+  });
   const save = useMutation({
     mutationFn: ({ item, data }) =>
       item === 'create'
@@ -99,6 +114,10 @@ export function PurchaseQuotationListPage() {
   const saveLinks = useMutation({
     mutationFn: ({ item, links }) =>
       api.replacePurchaseQuotationRequestLinks(item, links),
+  });
+  const saveExpenses = useMutation({
+    mutationFn: ({ item, expenses }) =>
+      api.replacePurchaseQuotationExpenses(item, expenses),
   });
   const refresh = () =>
     client.invalidateQueries({ queryKey: ['purchase-quotations'] });
@@ -146,7 +165,10 @@ export function PurchaseQuotationListPage() {
       title: 'Vigencia',
       render: (_, x) => dayjs(x.validUntil).format('DD/MM/YYYY'),
     },
-    { title: 'Total', render: (_, x) => money(x.total, x.currencyCode) },
+    {
+      title: 'Costo comparativo',
+      render: (_, x) => money(x.grandTotal, x.currencyCode),
+    },
     {
       title: 'Estado',
       render: (_, x) => <Tag color={colors[x.status]}>{labels[x.status]}</Tag>,
@@ -170,6 +192,11 @@ export function PurchaseQuotationListPage() {
           {item.status === 'DRAFT' ? (
             <Can permission={permissions.purchaseQuotations.linkRequests}>
               <Button onClick={() => setLinking(item)}>Solicitudes</Button>
+            </Can>
+          ) : null}
+          {['DRAFT', 'RECEIVED'].includes(item.status) ? (
+            <Can permission={permissions.purchaseQuotations.manageExpenses}>
+              <Button onClick={() => setExpensing(item)}>Gastos</Button>
             </Can>
           ) : null}
           {item.status === 'DRAFT' ? (
@@ -361,6 +388,12 @@ export function PurchaseQuotationListPage() {
                   children: `${money(value.subtotal, value.currencyCode)} · -${money(value.discount, value.currencyCode)} · ${money(value.tax, value.currencyCode)} · ${money(value.total, value.currencyCode)}`,
                 },
                 {
+                  key: 'comparativeTotal',
+                  label: 'Gastos / Costo comparativo',
+                  span: 2,
+                  children: `${money(value.expenseTotal, value.currencyCode)} · ${money(value.grandTotal, value.currencyCode)}`,
+                },
+                {
                   key: 'notes',
                   label: 'Observaciones',
                   span: 2,
@@ -452,7 +485,60 @@ export function PurchaseQuotationListPage() {
               ]}
               locale={{ emptyText: 'Sin solicitudes vinculadas' }}
             />
+            <Table
+              rowKey="id"
+              pagination={false}
+              style={{ marginTop: 16 }}
+              dataSource={value.expenses}
+              columns={[
+                { title: '#', dataIndex: 'lineNumber' },
+                {
+                  title: 'Tipo de gasto',
+                  render: (_, x) =>
+                    `${x.expenseType.code} · ${x.expenseType.name}`,
+                },
+                {
+                  title: 'Descripción',
+                  dataIndex: 'description',
+                  render: (text) => text || '—',
+                },
+                {
+                  title: 'Importe',
+                  render: (_, x) => money(x.amount, value.currencyCode),
+                },
+              ]}
+              locale={{ emptyText: 'Sin gastos adicionales' }}
+            />
           </>
+        ) : null}
+      </Modal>
+      <Modal
+        title={expensing ? `Gastos · ${expensing.code}` : 'Gastos'}
+        open={Boolean(expensing)}
+        footer={null}
+        width={1050}
+        onCancel={() => setExpensing(null)}
+        destroyOnHidden
+        loading={expenseTypes.isLoading}
+      >
+        {expensing && expenseTypes.data ? (
+          <PurchaseQuotationExpensesForm
+            quotation={expensing}
+            expenseTypes={expenseTypes.data.expenseTypes}
+            isSubmitting={saveExpenses.isPending}
+            onCancel={() => setExpensing(null)}
+            onSubmit={async (expenses) => {
+              try {
+                await saveExpenses.mutateAsync({ item: expensing, expenses });
+                await refresh();
+                if (detailsId === expensing.id) await details.refetch();
+                setExpensing(null);
+                message.success('Gastos actualizados correctamente.');
+              } catch (error) {
+                message.error(error.message);
+              }
+            }}
+          />
         ) : null}
       </Modal>
       <Modal
