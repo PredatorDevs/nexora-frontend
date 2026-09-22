@@ -104,6 +104,7 @@ export const permissions = Object.freeze({
     read: 'purchase_quotations.read',
     create: 'purchase_quotations.create',
     update: 'purchase_quotations.update',
+    linkRequests: 'purchase_quotations.link_requests',
     receive: 'purchase_quotations.receive',
     review: 'purchase_quotations.review',
     cancel: 'purchase_quotations.cancel',

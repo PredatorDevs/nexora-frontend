@@ -20,6 +20,8 @@ import { DataTable } from '@/components/tables/DataTable.jsx';
 import { PageHeader } from '@/components/ui/PageHeader.jsx';
 import { permissions } from '@/config/permissions.js';
 import { PurchaseQuotationForm } from '../components/PurchaseQuotationForm.jsx';
+import { PurchaseQuotationRequestLinksForm } from '../components/PurchaseQuotationRequestLinksForm.jsx';
+import { listPurchaseRequests } from '@/modules/purchase-requests/purchase-requests.api.js';
 import * as api from '../purchase-quotations.api.js';
 const filters = {
   page: 1,
@@ -51,6 +53,7 @@ export function PurchaseQuotationListPage() {
   const { message, modal: dialog } = App.useApp(),
     client = useQueryClient();
   const [editing, setEditing] = useState(null),
+    [linking, setLinking] = useState(null),
     [detailsId, setDetailsId] = useState(null),
     [status, setStatus] = useState();
   const query = useQuery({
@@ -62,6 +65,23 @@ export function PurchaseQuotationListPage() {
     queryKey: ['purchase-quotations', 'detail', detailsId],
     queryFn: () => api.getPurchaseQuotation(detailsId),
     enabled: Boolean(detailsId),
+  });
+  const eligibleRequests = useQuery({
+    queryKey: ['purchase-requests', 'eligible-for-quotation'],
+    queryFn: async () => {
+      const query = {
+        page: 1,
+        pageSize: 100,
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+      };
+      const [approved, linked] = await Promise.all([
+        listPurchaseRequests({ ...query, status: 'APPROVED' }),
+        listPurchaseRequests({ ...query, status: 'IN_QUOTATION' }),
+      ]);
+      return [...approved.purchaseRequests, ...linked.purchaseRequests];
+    },
+    enabled: Boolean(linking),
   });
   const save = useMutation({
     mutationFn: ({ item, data }) =>
@@ -75,6 +95,10 @@ export function PurchaseQuotationListPage() {
   const transition = useMutation({
     mutationFn: ({ item, action, reason }) =>
       api.transitionPurchaseQuotation(item, action, reason),
+  });
+  const saveLinks = useMutation({
+    mutationFn: ({ item, links }) =>
+      api.replacePurchaseQuotationRequestLinks(item, links),
   });
   const refresh = () =>
     client.invalidateQueries({ queryKey: ['purchase-quotations'] });
@@ -135,12 +159,17 @@ export function PurchaseQuotationListPage() {
             icon={<EyeOutlined />}
             onClick={() => setDetailsId(item.id)}
           />
-          {item.status === 'DRAFT' ? (
+          {item.status === 'DRAFT' && !item.requestLinks?.length ? (
             <Can permission={permissions.purchaseQuotations.update}>
               <Button
                 icon={<EditOutlined />}
                 onClick={() => setEditing(item)}
               />
+            </Can>
+          ) : null}
+          {item.status === 'DRAFT' ? (
+            <Can permission={permissions.purchaseQuotations.linkRequests}>
+              <Button onClick={() => setLinking(item)}>Solicitudes</Button>
             </Can>
           ) : null}
           {item.status === 'DRAFT' ? (
@@ -399,7 +428,66 @@ export function PurchaseQuotationListPage() {
                 },
               ]}
             />
+            <Table
+              rowKey="id"
+              pagination={false}
+              style={{ marginTop: 16 }}
+              dataSource={value.requestLinks?.flatMap((link) =>
+                link.details.map((item) => ({
+                  ...item,
+                  purchaseRequest: link.purchaseRequest,
+                })),
+              )}
+              columns={[
+                {
+                  title: 'Solicitud vinculada',
+                  render: (_, x) => x.purchaseRequest.code,
+                },
+                {
+                  title: 'Producto solicitado',
+                  render: (_, x) =>
+                    `${x.requestDetail.product.internalCode} · ${x.requestDetail.product.name}`,
+                },
+                { title: 'Cantidad vinculada', dataIndex: 'quantity' },
+              ]}
+              locale={{ emptyText: 'Sin solicitudes vinculadas' }}
+            />
           </>
+        ) : null}
+      </Modal>
+      <Modal
+        title={
+          linking
+            ? `Solicitudes de origen · ${linking.code}`
+            : 'Solicitudes de origen'
+        }
+        open={Boolean(linking)}
+        footer={null}
+        width={1100}
+        onCancel={() => setLinking(null)}
+        destroyOnHidden
+        loading={eligibleRequests.isLoading}
+      >
+        {linking && eligibleRequests.data ? (
+          <PurchaseQuotationRequestLinksForm
+            quotation={linking}
+            purchaseRequests={eligibleRequests.data}
+            isSubmitting={saveLinks.isPending}
+            onCancel={() => setLinking(null)}
+            onSubmit={async (links) => {
+              try {
+                await saveLinks.mutateAsync({ item: linking, links });
+                await Promise.all([
+                  refresh(),
+                  client.invalidateQueries({ queryKey: ['purchase-requests'] }),
+                ]);
+                setLinking(null);
+                message.success('Solicitudes vinculadas correctamente.');
+              } catch (error) {
+                message.error(error.message);
+              }
+            }}
+          />
         ) : null}
       </Modal>
     </>

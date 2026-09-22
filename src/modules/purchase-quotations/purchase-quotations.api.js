@@ -15,6 +15,14 @@ export async function createPurchaseQuotation(data) {
 export async function updatePurchaseQuotation(id, data) {
   return (await apiClient.put(`/purchase-quotations/${id}`, data)).data;
 }
+export async function replacePurchaseQuotationRequestLinks(item, links) {
+  return (
+    await apiClient.put(`/purchase-quotations/${item.id}/request-links`, {
+      expectedUpdatedAt: item.updatedAt,
+      links,
+    })
+  ).data;
+}
 export async function transitionPurchaseQuotation(item, action, reason) {
   return (
     await apiClient.post(`/purchase-quotations/${item.id}/${action}`, {
