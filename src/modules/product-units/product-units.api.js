@@ -3,6 +3,9 @@ export async function listProductUnits(params) {
   const r = await apiClient.get('/product-units', { params });
   return { productUnits: r.data, pagination: r.meta.pagination };
 }
+export async function getProductUnit(id) {
+  return (await apiClient.get(`/product-units/${id}`)).data;
+}
 export async function createProductUnit(data) {
   return (await apiClient.post('/product-units', data)).data;
 }

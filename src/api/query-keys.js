@@ -33,6 +33,11 @@ export const queryKeys = Object.freeze({
     list: (filters) => ['locations', 'list', filters],
     detail: (id) => ['locations', 'detail', Number(id)],
   }),
+  productUnits: Object.freeze({
+    all: Object.freeze(['product-units']),
+    list: (filters) => ['product-units', 'list', filters],
+    detail: (id) => ['product-units', 'detail', Number(id)],
+  }),
   suppliers: Object.freeze({
     all: Object.freeze(['suppliers']),
     list: (filters) => ['suppliers', 'list', filters],

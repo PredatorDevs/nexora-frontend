@@ -1,6 +1,7 @@
-import { EditOutlined, PlusOutlined } from '@ant-design/icons';
+import { EditOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { App, Button, Card, Modal, Space } from 'antd';
+import { Alert, App, Button, Card, Descriptions, Modal, Space, Spin } from 'antd';
+import dayjs from 'dayjs';
 import { useCallback, useMemo, useState } from 'react';
 import { Can } from '@/components/authorization/Can.jsx';
 import { DataTable } from '@/components/tables/DataTable.jsx';
@@ -38,8 +39,15 @@ export function ProductDictionaryPage({ kind }) {
     { message } = App.useApp(),
     client = useQueryClient();
   const [modal, setModal] = useState(null);
+  const [detailsId, setDetailsId] = useState(null);
   const queryKey = [config.key, 'list', filters];
   const query = useQuery({ queryKey, queryFn: () => config.api.list(filters) });
+  const detailsQuery = useQuery({
+    queryKey: [config.key, 'detail', Number(detailsId)],
+    queryFn: () => config.api.get(detailsId),
+    enabled: Boolean(detailsId),
+  });
+  const details = detailsQuery.data;
   const create = useMutation({ mutationFn: config.api.create });
   const update = useMutation({
     mutationFn: ({ id, data }) => config.api.update(id, data),
@@ -99,6 +107,13 @@ export function ProductDictionaryPage({ kind }) {
         title: 'Acciones',
         render: (_, item) => (
           <Space>
+            <Can permission={config.permissions.read}>
+              <Button
+                icon={<EyeOutlined />}
+                aria-label={`Ver detalle de ${item.name}`}
+                onClick={() => setDetailsId(item.id)}
+              />
+            </Can>
             <Can permission={config.permissions.update}>
               <Button icon={<EditOutlined />} onClick={() => setModal(item)} />
             </Can>
@@ -172,6 +187,78 @@ export function ProductDictionaryPage({ kind }) {
             onCancel={() => setModal(null)}
             onSubmit={submit}
           />
+        ) : null}
+      </Modal>
+      <Modal
+        title={details?.name ?? `Detalle de ${config.singular}`}
+        open={Boolean(detailsId)}
+        footer={null}
+        width={760}
+        onCancel={() => setDetailsId(null)}
+        destroyOnHidden
+      >
+        {detailsQuery.isLoading ? (
+          <div style={{ display: 'grid', minHeight: 160, placeItems: 'center' }}>
+            <Spin />
+          </div>
+        ) : detailsQuery.isError ? (
+          <Alert
+            showIcon
+            type="error"
+            message={`No fue posible cargar la ${config.singular}.`}
+            description={detailsQuery.error.message}
+            action={<Button onClick={() => detailsQuery.refetch()}>Reintentar</Button>}
+          />
+        ) : details ? (
+          <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
+            <Descriptions.Item label="ID">{details.id}</Descriptions.Item>
+            <Descriptions.Item label="Código">{details.code}</Descriptions.Item>
+            <Descriptions.Item label="Estado" span={2}>
+              <StatusBadge status={details.isActive ? 'ACTIVE' : 'INACTIVE'} />
+            </Descriptions.Item>
+            {kind === 'brand' ? (
+              <>
+                <Descriptions.Item label="Sitio web" span={2}>
+                  {details.website ?? '—'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Referencia del logo" span={2}>
+                  {details.logoStorageKey ?? '—'}
+                </Descriptions.Item>
+              </>
+            ) : (
+              <>
+                <Descriptions.Item label="Tipo" span={2}>
+                  {details.parentCategoryId
+                    ? 'Subcategoría'
+                    : 'Categoría principal'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Categoría padre" span={2}>
+                  {details.parent
+                    ? `${details.parent.code} — ${details.parent.name}`
+                    : 'Categoría principal'}
+                </Descriptions.Item>
+                {details.parent ? (
+                  <Descriptions.Item label="Estado de la categoría padre" span={2}>
+                    <StatusBadge
+                      status={details.parent.isActive ? 'ACTIVE' : 'INACTIVE'}
+                    />
+                  </Descriptions.Item>
+                ) : null}
+                <Descriptions.Item label="Subcategorías directas" span={2}>
+                  {details._count?.children ?? 0}
+                </Descriptions.Item>
+              </>
+            )}
+            <Descriptions.Item label="Descripción" span={2}>
+              {details.description ?? '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Creada">
+              {dayjs(details.createdAt).format('DD/MM/YYYY HH:mm')}
+            </Descriptions.Item>
+            <Descriptions.Item label="Última actualización">
+              {dayjs(details.updatedAt).format('DD/MM/YYYY HH:mm')}
+            </Descriptions.Item>
+          </Descriptions>
         ) : null}
       </Modal>
     </>

@@ -1,7 +1,9 @@
-import { EditOutlined, PlusOutlined } from '@ant-design/icons';
+import { EditOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { App, Button, Card, Modal, Space, Tag } from 'antd';
+import { Alert, App, Button, Card, Descriptions, Modal, Space, Spin, Tag } from 'antd';
+import dayjs from 'dayjs';
 import { useCallback, useMemo, useState } from 'react';
+import { queryKeys } from '@/api/query-keys.js';
 import { Can } from '@/components/authorization/Can.jsx';
 import { DataTable } from '@/components/tables/DataTable.jsx';
 import { PageHeader } from '@/components/ui/PageHeader.jsx';
@@ -14,10 +16,17 @@ export function ProductUnitListPage() {
   const { message } = App.useApp(),
     client = useQueryClient();
   const [modal, setModal] = useState(null);
+  const [detailsId, setDetailsId] = useState(null);
   const query = useQuery({
-    queryKey: ['product-units', 'list', filters],
+    queryKey: queryKeys.productUnits.list(filters),
     queryFn: () => api.listProductUnits(filters),
   });
+  const detailsQuery = useQuery({
+    queryKey: queryKeys.productUnits.detail(detailsId),
+    queryFn: () => api.getProductUnit(detailsId),
+    enabled: Boolean(detailsId),
+  });
+  const details = detailsQuery.data;
   const create = useMutation({ mutationFn: api.createProductUnit }),
     update = useMutation({
       mutationFn: ({ id, data }) => api.updateProductUnit(id, data),
@@ -26,7 +35,7 @@ export function ProductUnitListPage() {
       mutationFn: ({ item, next }) => api.changeProductUnitStatus(item, next),
     });
   const refresh = useCallback(
-    () => client.invalidateQueries({ queryKey: ['product-units'] }),
+    () => client.invalidateQueries({ queryKey: queryKeys.productUnits.all }),
     [client],
   );
   async function submit(data) {
@@ -71,6 +80,13 @@ export function ProductUnitListPage() {
         title: 'Acciones',
         render: (_, item) => (
           <Space>
+            <Can permission={permissions.productUnits.read}>
+              <Button
+                icon={<EyeOutlined />}
+                aria-label={`Ver detalle de ${item.name}`}
+                onClick={() => setDetailsId(item.id)}
+              />
+            </Can>
             <Can permission={permissions.productUnits.update}>
               <Button icon={<EditOutlined />} onClick={() => setModal(item)} />
             </Can>
@@ -143,6 +159,67 @@ export function ProductUnitListPage() {
             onCancel={() => setModal(null)}
             onSubmit={submit}
           />
+        ) : null}
+      </Modal>
+      <Modal
+        title={details?.name ?? 'Detalle de la unidad comercial'}
+        open={Boolean(detailsId)}
+        footer={null}
+        width={800}
+        onCancel={() => setDetailsId(null)}
+        destroyOnHidden
+      >
+        {detailsQuery.isLoading ? (
+          <div style={{ display: 'grid', minHeight: 160, placeItems: 'center' }}>
+            <Spin />
+          </div>
+        ) : detailsQuery.isError ? (
+          <Alert
+            showIcon
+            type="error"
+            message="No fue posible cargar la unidad comercial."
+            description={detailsQuery.error.message}
+            action={<Button onClick={() => detailsQuery.refetch()}>Reintentar</Button>}
+          />
+        ) : details ? (
+          <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
+            <Descriptions.Item label="ID">{details.id}</Descriptions.Item>
+            <Descriptions.Item label="Código">{details.code}</Descriptions.Item>
+            <Descriptions.Item label="Uso">
+              <Tag color={details.type === 'PURCHASE' ? 'blue' : 'green'}>
+                {details.type === 'PURCHASE' ? 'Compra' : 'Venta'}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="Estado">
+              <StatusBadge status={details.isActive ? 'ACTIVE' : 'INACTIVE'} />
+            </Descriptions.Item>
+            <Descriptions.Item label="Unidad de medida" span={2}>
+              {details.measurementUnit.name}
+            </Descriptions.Item>
+            <Descriptions.Item label="Nombre plural">
+              {details.measurementUnit.pluralName ?? '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Símbolo">
+              {details.measurementUnit.symbol ?? '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Código MH">
+              {details.measurementUnit.mhCode ?? '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Estado de la unidad base">
+              <StatusBadge
+                status={details.measurementUnit.isActive ? 'ACTIVE' : 'INACTIVE'}
+              />
+            </Descriptions.Item>
+            <Descriptions.Item label="Descripción" span={2}>
+              {details.description ?? '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Creada">
+              {dayjs(details.createdAt).format('DD/MM/YYYY HH:mm')}
+            </Descriptions.Item>
+            <Descriptions.Item label="Última actualización">
+              {dayjs(details.updatedAt).format('DD/MM/YYYY HH:mm')}
+            </Descriptions.Item>
+          </Descriptions>
         ) : null}
       </Modal>
     </>

@@ -4,6 +4,9 @@ const catalog = (path, key) => ({
     const r = await apiClient.get(path, { params });
     return { [key]: r.data, pagination: r.meta.pagination };
   },
+  async get(id) {
+    return (await apiClient.get(`${path}/${id}`)).data;
+  },
   async create(data) {
     return (await apiClient.post(path, data)).data;
   },
