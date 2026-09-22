@@ -44,6 +44,8 @@ const permissionCatalog = [
   ...Object.values(permissions.productUnits),
   ...Object.values(permissions.products),
   ...Object.values(permissions.productImages),
+  ...Object.values(permissions.purchaseRequests),
+  ...Object.values(permissions.expenseTypes),
   'address_dictionaries.read',
   'economic_activities.read',
   'measurement_units.read',

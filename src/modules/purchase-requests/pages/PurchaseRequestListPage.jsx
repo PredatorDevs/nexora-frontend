@@ -273,6 +273,9 @@ export function PurchaseRequestListPage() {
               size="small"
               column={2}
               items={[
+                { key: 'id', label: 'ID', children: value.id },
+                { key: 'uuid', label: 'UUID', children: value.uuid },
+                { key: 'code', label: 'Código', children: value.code },
                 {
                   key: 'status',
                   label: 'Estado',
@@ -285,7 +288,7 @@ export function PurchaseRequestListPage() {
                 {
                   key: 'requester',
                   label: 'Solicitante',
-                  children: value.requestedBy.displayName,
+                  children: `${value.requestedBy.displayName} · ${value.requestedBy.email}`,
                 },
                 {
                   key: 'branch',
@@ -306,6 +309,34 @@ export function PurchaseRequestListPage() {
                   key: 'requiredDate',
                   label: 'Fecha requerida',
                   children: dayjs(value.requiredDate).format('DD/MM/YYYY'),
+                },
+                {
+                  key: 'submittedAt',
+                  label: 'Enviada a aprobación',
+                  children: value.submittedAt
+                    ? dayjs(value.submittedAt).format('DD/MM/YYYY HH:mm')
+                    : '—',
+                },
+                {
+                  key: 'approvedAt',
+                  label: 'Aprobada',
+                  children: value.approvedAt
+                    ? `${dayjs(value.approvedAt).format('DD/MM/YYYY HH:mm')} · ${value.approvedBy?.displayName ?? '—'}`
+                    : '—',
+                },
+                {
+                  key: 'rejectedAt',
+                  label: 'Rechazada',
+                  children: value.rejectedAt
+                    ? `${dayjs(value.rejectedAt).format('DD/MM/YYYY HH:mm')} · ${value.rejectedBy?.displayName ?? '—'}`
+                    : '—',
+                },
+                {
+                  key: 'cancelledAt',
+                  label: 'Cancelada',
+                  children: value.cancelledAt
+                    ? `${dayjs(value.cancelledAt).format('DD/MM/YYYY HH:mm')} · ${value.cancelledBy?.displayName ?? '—'}`
+                    : '—',
                 },
                 {
                   key: 'justification',
@@ -331,6 +362,16 @@ export function PurchaseRequestListPage() {
                   span: 2,
                   children: value.cancellationReason || '—',
                 },
+                {
+                  key: 'createdAt',
+                  label: 'Creada',
+                  children: dayjs(value.createdAt).format('DD/MM/YYYY HH:mm'),
+                },
+                {
+                  key: 'updatedAt',
+                  label: 'Última actualización',
+                  children: dayjs(value.updatedAt).format('DD/MM/YYYY HH:mm'),
+                },
               ]}
             />
             <Table
@@ -345,10 +386,21 @@ export function PurchaseRequestListPage() {
                   render: (_, row) =>
                     `${row.product.internalCode} · ${row.product.name}`,
                 },
+                {
+                  title: 'SKU',
+                  render: (_, row) => row.product.sku || '—',
+                },
                 { title: 'Cantidad', dataIndex: 'quantity' },
-                { title: 'Unidad', render: (_, row) => row.productUnit.name },
-                { title: 'Descripción', dataIndex: 'description' },
-                { title: 'Notas', dataIndex: 'notes' },
+                {
+                  title: 'Unidad',
+                  render: (_, row) =>
+                    `${row.productUnit.name}${row.productUnit.measurementUnit?.symbol ? ` (${row.productUnit.measurementUnit.symbol})` : ''}`,
+                },
+                {
+                  title: 'Descripción',
+                  render: (_, row) => row.description || '—',
+                },
+                { title: 'Notas', render: (_, row) => row.notes || '—' },
               ]}
             />
           </>
