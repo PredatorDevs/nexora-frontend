@@ -123,6 +123,15 @@ export const permissions = Object.freeze({
     manageExpenses: 'purchase_orders.manage_expenses',
     manageDocuments: 'purchase_orders.manage_documents',
   }),
+  purchases: Object.freeze({
+    read: 'purchases.read',
+    create: 'purchases.create',
+    update: 'purchases.update',
+    receive: 'purchases.receive',
+    verify: 'purchases.verify',
+    close: 'purchases.close',
+    cancel: 'purchases.cancel',
+  }),
   files: Object.freeze({
     read: 'files.read',
     create: 'files.create',
