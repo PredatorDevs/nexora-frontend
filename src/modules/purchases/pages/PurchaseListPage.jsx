@@ -75,6 +75,16 @@ export function PurchaseListPage() {
   });
   const refresh = () => client.invalidateQueries({ queryKey: ['purchases'] });
   async function change(item, action, reason) {
+    if (
+      action === 'receive' &&
+      (!item.supplierInvoiceNumber || !item.supplierInvoiceDate)
+    ) {
+      message.warning(
+        'Completa el número y la fecha de la factura antes de confirmar la recepción.',
+      );
+      setEditing(item);
+      return;
+    }
     try {
       await transition.mutateAsync({ item, action, reason });
       await refresh();
