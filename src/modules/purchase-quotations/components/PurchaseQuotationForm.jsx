@@ -25,6 +25,7 @@ const params = {
   sortOrder: 'asc',
   isActive: true,
 };
+const contactParams = { ...params, sortBy: 'fullName' };
 const nullable = (v) => v?.trim() || null;
 export function PurchaseQuotationForm({
   initialValues,
@@ -43,7 +44,7 @@ export function PurchaseQuotationForm({
   });
   const contacts = useQuery({
     queryKey: ['supplier-contacts', 'quotation-options', supplierId],
-    queryFn: () => suppliersApi.listSupplierContacts(supplierId, params),
+    queryFn: () => suppliersApi.listSupplierContacts(supplierId, contactParams),
     enabled: Boolean(supplierId),
   });
   const products = useQuery({
