@@ -6,11 +6,18 @@ const page = lazyRoute(
   () => import('./pages/PurchaseQuotationListPage.jsx'),
   'PurchaseQuotationListPage',
 );
+const comparisonPage = lazyRoute(
+  () => import('./pages/PurchaseQuotationComparisonPage.jsx'),
+  'PurchaseQuotationComparisonPage',
+);
 export const purchaseQuotationRoutes = [
   {
     element: (
       <RequirePermission permission={permissions.purchaseQuotations.read} />
     ),
-    children: [{ path: routes.purchaseQuotations, element: page }],
+    children: [
+      { path: routes.purchaseQuotations, element: page },
+      { path: routes.purchaseQuotationComparison, element: comparisonPage },
+    ],
   },
 ];

@@ -102,6 +102,13 @@ export const navigationItems = Object.freeze([
     permission: permissions.purchaseQuotations.read,
   }),
   Object.freeze({
+    key: 'purchase-quotation-comparison',
+    label: 'Comparación de cotizaciones',
+    path: routes.purchaseQuotationComparison,
+    icon: 'home',
+    permission: permissions.purchaseQuotations.read,
+  }),
+  Object.freeze({
     key: 'home',
     label: 'Inicio',
     path: routes.home,

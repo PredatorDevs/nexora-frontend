@@ -406,6 +406,13 @@ export function PurchaseQuotationListPage() {
                   children: value.cancellationReason ?? '—',
                 },
                 {
+                  key: 'decision',
+                  label: 'Decisión de comparación',
+                  span: 2,
+                  children:
+                    value.selectionReason ?? value.rejectionReason ?? '—',
+                },
+                {
                   key: 'audit',
                   label: 'Creada / Actualizada',
                   span: 2,
@@ -469,6 +476,7 @@ export function PurchaseQuotationListPage() {
                 link.details.map((item) => ({
                   ...item,
                   purchaseRequest: link.purchaseRequest,
+                  decisionReason: link.decisionReason,
                 })),
               )}
               columns={[
@@ -482,6 +490,11 @@ export function PurchaseQuotationListPage() {
                     `${x.requestDetail.product.internalCode} · ${x.requestDetail.product.name}`,
                 },
                 { title: 'Cantidad vinculada', dataIndex: 'quantity' },
+                { title: 'Cantidad adjudicada', dataIndex: 'awardedQuantity' },
+                {
+                  title: 'Decisión',
+                  render: (_, x) => x.decisionReason ?? '—',
+                },
               ]}
               locale={{ emptyText: 'Sin solicitudes vinculadas' }}
             />

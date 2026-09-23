@@ -31,6 +31,24 @@ export async function replacePurchaseQuotationExpenses(item, expenses) {
     })
   ).data;
 }
+export async function getPurchaseQuotationComparison(purchaseRequestId) {
+  return (
+    await apiClient.get(
+      `/purchase-quotations/comparison/${purchaseRequestId}`,
+    )
+  ).data;
+}
+export async function selectPurchaseQuotationAwards(
+  purchaseRequestId,
+  data,
+) {
+  return (
+    await apiClient.post(
+      `/purchase-quotations/comparison/${purchaseRequestId}/select`,
+      data,
+    )
+  ).data;
+}
 export async function transitionPurchaseQuotation(item, action, reason) {
   return (
     await apiClient.post(`/purchase-quotations/${item.id}/${action}`, {
