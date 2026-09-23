@@ -18,6 +18,7 @@ export const routes = Object.freeze({
   expenseTypes: '/expense-types',
   purchaseQuotations: '/purchase-quotations',
   purchaseQuotationComparison: '/purchase-quotation-comparison',
+  purchaseOrders: '/purchase-orders',
   users: '/users',
   roles: '/roles',
   permissions: '/permissions',
