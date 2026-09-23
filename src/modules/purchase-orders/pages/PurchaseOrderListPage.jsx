@@ -164,7 +164,10 @@ export function PurchaseOrderListPage() {
                 orderDate: v.orderDate.toISOString(),
                 expectedDate: v.expectedDate.toISOString(),
               });
-              await refresh();
+              await Promise.all([
+                refresh(),
+                client.invalidateQueries({ queryKey: ['purchase-requests'] }),
+              ]);
               setGenerating(false);
               message.success('Órdenes generadas.');
             } catch (e) {
