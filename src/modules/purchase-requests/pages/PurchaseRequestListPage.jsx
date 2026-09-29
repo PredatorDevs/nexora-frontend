@@ -1,4 +1,5 @@
 import {
+  ApartmentOutlined,
   EditOutlined,
   EyeOutlined,
   PlusOutlined,
@@ -9,6 +10,7 @@ import {
   App,
   Button,
   Card,
+  DatePicker,
   Descriptions,
   Input,
   Modal,
@@ -25,6 +27,7 @@ import { DataTable } from '@/components/tables/DataTable.jsx';
 import { PageHeader } from '@/components/ui/PageHeader.jsx';
 import { permissions } from '@/config/permissions.js';
 import { PurchaseRequestForm } from '../components/PurchaseRequestForm.jsx';
+import { PurchaseRequestConsolidationForm } from '../components/PurchaseRequestConsolidationForm.jsx';
 import * as api from '../purchase-requests.api.js';
 
 const filters = {
@@ -37,6 +40,7 @@ const labels = {
   DRAFT: 'Borrador',
   SUBMITTED: 'Enviada',
   APPROVED: 'Aprobada',
+  CONSOLIDATED: 'Consolidada',
   REJECTED: 'Rechazada',
   IN_QUOTATION: 'En cotización',
   COMPLETED: 'Completada',
@@ -46,6 +50,7 @@ const colors = {
   DRAFT: 'default',
   SUBMITTED: 'processing',
   APPROVED: 'success',
+  CONSOLIDATED: 'cyan',
   REJECTED: 'error',
   IN_QUOTATION: 'purple',
   COMPLETED: 'green',
@@ -58,10 +63,31 @@ export function PurchaseRequestListPage() {
   const [editing, setEditing] = useState(null);
   const [detailsId, setDetailsId] = useState(null);
   const [status, setStatus] = useState();
+  const [consolidationState, setConsolidationState] = useState();
+  const [dateRange, setDateRange] = useState();
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [consolidating, setConsolidating] = useState(false);
   const query = useQuery({
-    queryKey: ['purchase-requests', 'list', status],
+    queryKey: [
+      'purchase-requests',
+      'list',
+      status,
+      consolidationState,
+      dateRange?.[0]?.valueOf(),
+      dateRange?.[1]?.valueOf(),
+    ],
     queryFn: () =>
-      api.listPurchaseRequests({ ...filters, ...(status ? { status } : {}) }),
+      api.listPurchaseRequests({
+        ...filters,
+        ...(status ? { status } : {}),
+        ...(consolidationState ? { consolidationState } : {}),
+        ...(dateRange?.[0]
+          ? { dateFrom: dateRange[0].startOf('day').toISOString() }
+          : {}),
+        ...(dateRange?.[1]
+          ? { dateTo: dateRange[1].endOf('day').toISOString() }
+          : {}),
+      }),
   });
   const details = useQuery({
     queryKey: ['purchase-requests', 'detail', detailsId],
@@ -80,6 +106,9 @@ export function PurchaseRequestListPage() {
   const transition = useMutation({
     mutationFn: ({ item, action, reason }) =>
       api.transitionPurchaseRequest(item.id, action, item.updatedAt, reason),
+  });
+  const consolidate = useMutation({
+    mutationFn: api.consolidatePurchaseRequests,
   });
   const refresh = async () => {
     await client.invalidateQueries({ queryKey: ['purchase-requests'] });
@@ -121,6 +150,14 @@ export function PurchaseRequestListPage() {
   }
   const columns = [
     { title: 'Código', dataIndex: 'code' },
+    {
+      title: 'Tipo',
+      render: (_, item) => (
+        <Tag color={item.requestType === 'CONSOLIDATED' ? 'blue' : 'default'}>
+          {item.requestType === 'CONSOLIDATED' ? 'Consolidada' : 'Individual'}
+        </Tag>
+      ),
+    },
     { title: 'Sucursal', render: (_, item) => item.branch.name },
     { title: 'Almacén', render: (_, item) => item.warehouse.name },
     { title: 'Solicitante', render: (_, item) => item.requestedBy.displayName },
@@ -196,29 +233,58 @@ export function PurchaseRequestListPage() {
         title="Solicitudes de compra"
         description="Registra necesidades internas y controla su aprobación antes de cotizar."
         extra={
-          <Can permission={permissions.purchaseRequests.create}>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setEditing('create')}
-            >
-              Nueva solicitud
-            </Button>
-          </Can>
+          <Space wrap>
+            <Can permission={permissions.purchaseRequests.consolidate}>
+              <Button
+                icon={<ApartmentOutlined />}
+                disabled={selectedRowKeys.length < 2}
+                onClick={() => setConsolidating(true)}
+              >
+                Consolidar seleccionadas ({selectedRowKeys.length})
+              </Button>
+            </Can>
+            <Can permission={permissions.purchaseRequests.create}>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setEditing('create')}
+              >
+                Nueva solicitud
+              </Button>
+            </Can>
+          </Space>
         }
       />
       <Card>
-        <Select
-          allowClear
-          placeholder="Todos los estados"
-          style={{ width: 220, marginBottom: 16 }}
-          value={status}
-          options={Object.entries(labels).map(([value, label]) => ({
-            value,
-            label,
-          }))}
-          onChange={setStatus}
-        />
+        <Space wrap style={{ marginBottom: 16 }}>
+          <DatePicker.RangePicker
+            value={dateRange}
+            onChange={setDateRange}
+            placeholder={['Desde', 'Hasta']}
+          />
+          <Select
+            allowClear
+            placeholder="Todos los estados"
+            style={{ width: 220 }}
+            value={status}
+            options={Object.entries(labels).map(([value, label]) => ({
+              value,
+              label,
+            }))}
+            onChange={setStatus}
+          />
+          <Select
+            allowClear
+            placeholder="Todas las consolidaciones"
+            style={{ width: 230 }}
+            value={consolidationState}
+            options={[
+              { value: 'UNCONSOLIDATED', label: 'No consolidadas' },
+              { value: 'CONSOLIDATED', label: 'Ya consolidadas' },
+            ]}
+            onChange={setConsolidationState}
+          />
+        </Space>
         <DataTable
           ariaLabel="Solicitudes de compra"
           columns={columns}
@@ -227,8 +293,47 @@ export function PurchaseRequestListPage() {
           error={query.error}
           onRetry={query.refetch}
           pagination={query.data?.pagination ?? { ...filters, total: 0 }}
+          rowSelection={{
+            selectedRowKeys,
+            onChange: setSelectedRowKeys,
+            getCheckboxProps: (item) => ({
+              disabled:
+                item.requestType !== 'STANDARD' ||
+                item.status !== 'APPROVED' ||
+                Boolean(item.consolidatedIntoId),
+            }),
+          }}
         />
       </Card>
+      <Modal
+        title="Consolidar solicitudes de compra"
+        open={consolidating}
+        footer={null}
+        width={1000}
+        onCancel={() => setConsolidating(false)}
+        destroyOnHidden
+      >
+        <PurchaseRequestConsolidationForm
+          requests={
+            query.data?.purchaseRequests.filter((item) =>
+              selectedRowKeys.includes(item.id),
+            ) ?? []
+          }
+          isSubmitting={consolidate.isPending}
+          onCancel={() => setConsolidating(false)}
+          onSubmit={async (data) => {
+            try {
+              await consolidate.mutateAsync(data);
+              await refresh();
+              setSelectedRowKeys([]);
+              setConsolidating(false);
+              message.success('Solicitud consolidada creada como borrador.');
+            } catch (error) {
+              message.error(error.message);
+            }
+          }}
+        />
+      </Modal>
       <Modal
         title={
           editing === 'create'
@@ -276,6 +381,19 @@ export function PurchaseRequestListPage() {
                 { key: 'id', label: 'ID', children: value.id },
                 { key: 'uuid', label: 'UUID', children: value.uuid },
                 { key: 'code', label: 'Código', children: value.code },
+                {
+                  key: 'requestType',
+                  label: 'Tipo',
+                  children:
+                    value.requestType === 'CONSOLIDATED'
+                      ? 'Solicitud consolidada'
+                      : 'Solicitud individual',
+                },
+                {
+                  key: 'consolidatedInto',
+                  label: 'Consolidada en',
+                  children: value.consolidatedInto?.code ?? '—',
+                },
                 {
                   key: 'status',
                   label: 'Estado',

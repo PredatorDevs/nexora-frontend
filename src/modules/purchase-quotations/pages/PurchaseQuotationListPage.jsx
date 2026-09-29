@@ -77,6 +77,7 @@ export function PurchaseQuotationListPage() {
         pageSize: 100,
         sortBy: 'createdAt',
         sortOrder: 'desc',
+        requestType: 'CONSOLIDATED',
       };
       const [approved, linked] = await Promise.all([
         listPurchaseRequests({ ...query, status: 'APPROVED' }),

@@ -13,6 +13,9 @@ export async function getPurchaseRequest(id) {
 export async function createPurchaseRequest(data) {
   return (await apiClient.post('/purchase-requests', data)).data;
 }
+export async function consolidatePurchaseRequests(data) {
+  return (await apiClient.post('/purchase-requests/consolidate', data)).data;
+}
 export async function updatePurchaseRequest(id, data) {
   return (await apiClient.put(`/purchase-requests/${id}`, data)).data;
 }

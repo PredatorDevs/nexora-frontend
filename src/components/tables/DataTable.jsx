@@ -25,6 +25,7 @@ export function DataTable({
   onRetry,
   pagination,
   rowKey = 'id',
+  rowSelection,
   emptyTitle,
   emptyDescription,
 }) {
@@ -70,6 +71,7 @@ export function DataTable({
         onChange={tableChanged}
         pagination={tablePagination}
         rowKey={rowKey}
+        rowSelection={rowSelection}
         scroll={{ x: 'max-content' }}
       />
     </section>
