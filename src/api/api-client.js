@@ -97,7 +97,12 @@ export function createApiClient({
     return config;
   });
 
-  transport.interceptors.response.use(normalizeApiResponse, async (error) => {
+  transport.interceptors.response.use(
+    (response) =>
+      response.config.responseType === 'blob'
+        ? response
+        : normalizeApiResponse(response),
+    async (error) => {
     const config = error.config;
     const shouldRefresh =
       error.response?.status === 401 &&
@@ -119,7 +124,8 @@ export function createApiClient({
 
     await refreshAccessToken();
     return transport.request(config);
-  });
+    },
+  );
 
   return Object.freeze({
     request(config) {

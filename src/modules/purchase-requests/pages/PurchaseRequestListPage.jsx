@@ -2,6 +2,7 @@ import {
   ApartmentOutlined,
   EditOutlined,
   EyeOutlined,
+  FilePdfOutlined,
   PlusOutlined,
   SendOutlined,
 } from '@ant-design/icons';
@@ -110,6 +111,10 @@ export function PurchaseRequestListPage() {
   const consolidate = useMutation({
     mutationFn: api.consolidatePurchaseRequests,
   });
+  const downloadPdf = useMutation({
+    mutationFn: (item) => api.downloadPurchaseRequestPdf(item.id, item.code),
+    onError: (error) => message.error(error.message),
+  });
   const refresh = async () => {
     await client.invalidateQueries({ queryKey: ['purchase-requests'] });
   };
@@ -180,6 +185,20 @@ export function PurchaseRequestListPage() {
             aria-label={`Ver ${item.code}`}
             onClick={() => setDetailsId(item.id)}
           />
+          {item.requestType === 'CONSOLIDATED' &&
+          ['APPROVED', 'IN_QUOTATION', 'COMPLETED'].includes(item.status) ? (
+            <Can permission={permissions.purchaseRequests.read}>
+              <Button
+                icon={<FilePdfOutlined />}
+                loading={
+                  downloadPdf.isPending && downloadPdf.variables?.id === item.id
+                }
+                onClick={() => downloadPdf.mutate(item)}
+              >
+                PDF
+              </Button>
+            </Can>
+          ) : null}
           {item.status === 'DRAFT' ? (
             <Can permission={permissions.purchaseRequests.update}>
               <Button

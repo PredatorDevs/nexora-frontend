@@ -10,6 +10,20 @@ export async function listPurchaseRequests(params) {
 export async function getPurchaseRequest(id) {
   return (await apiClient.get(`/purchase-requests/${id}`)).data;
 }
+export async function downloadPurchaseRequestPdf(id, code) {
+  const response = await apiClient.get(`/purchase-requests/${id}/pdf`, {
+    responseType: 'blob',
+    headers: { Accept: 'application/pdf' },
+  });
+  const url = URL.createObjectURL(response.data);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `solicitud-${code}.pdf`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
 export async function createPurchaseRequest(data) {
   return (await apiClient.post('/purchase-requests', data)).data;
 }
