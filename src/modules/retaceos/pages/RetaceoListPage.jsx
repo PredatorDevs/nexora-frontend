@@ -1,12 +1,14 @@
 import { CalculatorOutlined, EditOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { App, Button, Card, Input, Modal, Popconfirm, Select, Space, Tag } from 'antd';
+import { App, Button, Card, DatePicker, Input, Modal, Popconfirm, Select, Space, Tag } from 'antd';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { Can } from '@/components/authorization/Can.jsx';
 import { DataTable } from '@/components/tables/DataTable.jsx';
 import { PageHeader } from '@/components/ui/PageHeader.jsx';
 import { permissions } from '@/config/permissions.js';
+import { listCountries } from '@/modules/companies/catalogs.api.js';
+import * as suppliersApi from '@/modules/suppliers/suppliers.api.js';
 import { RetaceoCosts } from '../components/RetaceoCosts.jsx';
 import { RetaceoDetails } from '../components/RetaceoDetails.jsx';
 import { RetaceoForm } from '../components/RetaceoForm.jsx';
@@ -27,6 +29,18 @@ export function RetaceoListPage() {
   const [manualTarget, setManualTarget] = useState(null);
   const list = useQuery({
     queryKey: ['retaceos', 'list', filters], queryFn: () => api.listRetaceos(filters),
+  });
+  const suppliers = useQuery({
+    queryKey: ['suppliers', 'retaceo-filter'],
+    queryFn: () => suppliersApi.listSuppliers({
+      page: 1, pageSize: 100, sortBy: 'name', sortOrder: 'asc',
+    }),
+    staleTime: 300_000,
+  });
+  const countries = useQuery({
+    queryKey: ['catalogs', 'countries', 'retaceo-filter'],
+    queryFn: listCountries,
+    staleTime: 300_000,
   });
   const details = useQuery({
     queryKey: ['retaceos', 'detail', detailsId], queryFn: () => api.getRetaceo(detailsId), enabled: Boolean(detailsId),
@@ -92,7 +106,46 @@ export function RetaceoListPage() {
     <Card>
       <Space wrap style={{ marginBottom: 16 }}>
         <Input.Search allowClear placeholder="Código, compra, proveedor o documento" style={{ width: 330 }} onSearch={(search) => setFilters((current) => ({ ...current, page: 1, search: search || undefined }))} />
+        <DatePicker.RangePicker
+          placeholder={['Desde', 'Hasta']}
+          onChange={(range) => setFilters((current) => ({
+            ...current,
+            page: 1,
+            dateFrom: range?.[0]?.startOf('day').toISOString(),
+            dateTo: range?.[1]?.endOf('day').toISOString(),
+          }))}
+        />
         <Select allowClear placeholder="Todos los estados" style={{ width: 210 }} options={Object.entries(statusLabels).map(([value, label]) => ({ value, label }))} onChange={(status) => setFilters((current) => ({ ...current, page: 1, status }))} />
+        <Select
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          placeholder="Todos los proveedores"
+          style={{ width: 250 }}
+          loading={suppliers.isLoading}
+          options={suppliers.data?.suppliers.map((item) => ({
+            value: item.id,
+            label: `${item.code} · ${item.name}`,
+          }))}
+          onChange={(supplierId) => setFilters((current) => ({
+            ...current, page: 1, supplierId,
+          }))}
+        />
+        <Select
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          placeholder="Todos los países"
+          style={{ width: 220 }}
+          loading={countries.isLoading}
+          options={countries.data?.map((item) => ({
+            value: item.id,
+            label: item.name,
+          }))}
+          onChange={(originCountryId) => setFilters((current) => ({
+            ...current, page: 1, originCountryId,
+          }))}
+        />
       </Space>
       <DataTable ariaLabel="Retaceos" columns={columns} dataSource={list.data?.retaceos} isLoading={list.isLoading} error={list.error} onRetry={list.refetch} pagination={list.data?.pagination ?? { ...filters, total: 0 }} onChange={(next) => setFilters((current) => ({ ...current, ...Object.fromEntries(Object.entries(next).filter(([key, value]) => key !== 'filters' && value !== undefined)) }))} />
     </Card>

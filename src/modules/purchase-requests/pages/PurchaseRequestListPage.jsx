@@ -27,6 +27,8 @@ import { Can } from '@/components/authorization/Can.jsx';
 import { DataTable } from '@/components/tables/DataTable.jsx';
 import { PageHeader } from '@/components/ui/PageHeader.jsx';
 import { permissions } from '@/config/permissions.js';
+import * as branchesApi from '@/modules/branches/branches.api.js';
+import * as warehousesApi from '@/modules/warehouses/warehouses.api.js';
 import { PurchaseRequestForm } from '../components/PurchaseRequestForm.jsx';
 import { PurchaseRequestConsolidationForm } from '../components/PurchaseRequestConsolidationForm.jsx';
 import * as api from '../purchase-requests.api.js';
@@ -64,7 +66,11 @@ export function PurchaseRequestListPage() {
   const [editing, setEditing] = useState(null);
   const [detailsId, setDetailsId] = useState(null);
   const [status, setStatus] = useState();
+  const [search, setSearch] = useState();
+  const [requestType, setRequestType] = useState();
   const [consolidationState, setConsolidationState] = useState();
+  const [branchId, setBranchId] = useState();
+  const [warehouseId, setWarehouseId] = useState();
   const [dateRange, setDateRange] = useState();
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [consolidating, setConsolidating] = useState(false);
@@ -73,7 +79,11 @@ export function PurchaseRequestListPage() {
       'purchase-requests',
       'list',
       status,
+      search,
+      requestType,
       consolidationState,
+      branchId,
+      warehouseId,
       dateRange?.[0]?.valueOf(),
       dateRange?.[1]?.valueOf(),
     ],
@@ -81,7 +91,11 @@ export function PurchaseRequestListPage() {
       api.listPurchaseRequests({
         ...filters,
         ...(status ? { status } : {}),
+        ...(search ? { search } : {}),
+        ...(requestType ? { requestType } : {}),
         ...(consolidationState ? { consolidationState } : {}),
+        ...(branchId ? { branchId } : {}),
+        ...(warehouseId ? { warehouseId } : {}),
         ...(dateRange?.[0]
           ? { dateFrom: dateRange[0].startOf('day').toISOString() }
           : {}),
@@ -89,6 +103,18 @@ export function PurchaseRequestListPage() {
           ? { dateTo: dateRange[1].endOf('day').toISOString() }
           : {}),
       }),
+  });
+  const branches = useQuery({
+    queryKey: ['branches', 'purchase-request-filter'],
+    queryFn: () => branchesApi.listBranches({ ...filters, sortBy: 'name' }),
+    staleTime: 300_000,
+  });
+  const warehouses = useQuery({
+    queryKey: ['warehouses', 'purchase-request-filter', branchId],
+    queryFn: () =>
+      warehousesApi.listWarehouses({ ...filters, sortBy: 'name', branchId }),
+    enabled: Boolean(branchId),
+    staleTime: 300_000,
   });
   const details = useQuery({
     queryKey: ['purchase-requests', 'detail', detailsId],
@@ -276,6 +302,12 @@ export function PurchaseRequestListPage() {
       />
       <Card>
         <Space wrap style={{ marginBottom: 16 }}>
+          <Input.Search
+            allowClear
+            placeholder="Código, justificación o solicitante"
+            style={{ width: 320 }}
+            onSearch={(value) => setSearch(value.trim() || undefined)}
+          />
           <DatePicker.RangePicker
             value={dateRange}
             onChange={setDateRange}
@@ -294,6 +326,17 @@ export function PurchaseRequestListPage() {
           />
           <Select
             allowClear
+            placeholder="Todos los tipos"
+            style={{ width: 190 }}
+            value={requestType}
+            options={[
+              { value: 'STANDARD', label: 'Individuales' },
+              { value: 'CONSOLIDATED', label: 'Consolidadas' },
+            ]}
+            onChange={setRequestType}
+          />
+          <Select
+            allowClear
             placeholder="Todas las consolidaciones"
             style={{ width: 230 }}
             value={consolidationState}
@@ -302,6 +345,38 @@ export function PurchaseRequestListPage() {
               { value: 'CONSOLIDATED', label: 'Ya consolidadas' },
             ]}
             onChange={setConsolidationState}
+          />
+          <Select
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            placeholder="Todas las sucursales"
+            style={{ width: 230 }}
+            value={branchId}
+            loading={branches.isLoading}
+            options={branches.data?.branches.map((item) => ({
+              value: item.id,
+              label: `${item.code} · ${item.name}`,
+            }))}
+            onChange={(value) => {
+              setBranchId(value);
+              setWarehouseId(undefined);
+            }}
+          />
+          <Select
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            disabled={!branchId}
+            placeholder="Todos los almacenes"
+            style={{ width: 230 }}
+            value={warehouseId}
+            loading={warehouses.isLoading}
+            options={warehouses.data?.warehouses.map((item) => ({
+              value: item.id,
+              label: `${item.code} · ${item.name}`,
+            }))}
+            onChange={setWarehouseId}
           />
         </Space>
         <DataTable

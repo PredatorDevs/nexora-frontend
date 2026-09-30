@@ -4,6 +4,7 @@ import {
   App,
   Button,
   Card,
+  DatePicker,
   Descriptions,
   Input,
   Modal,
@@ -19,9 +20,12 @@ import { Can } from '@/components/authorization/Can.jsx';
 import { DataTable } from '@/components/tables/DataTable.jsx';
 import { PageHeader } from '@/components/ui/PageHeader.jsx';
 import { permissions } from '@/config/permissions.js';
+import * as branchesApi from '@/modules/branches/branches.api.js';
+import * as suppliersApi from '@/modules/suppliers/suppliers.api.js';
+import * as warehousesApi from '@/modules/warehouses/warehouses.api.js';
 import { PurchaseForm } from '../components/PurchaseForm.jsx';
 import * as api from '../purchases.api.js';
-const filters = {
+const initialFilters = {
   page: 1,
   pageSize: 100,
   sortBy: 'createdAt',
@@ -50,13 +54,35 @@ const date = (value, withTime = true) =>
 export function PurchaseListPage() {
   const { message, modal: dialog } = App.useApp();
   const client = useQueryClient();
-  const [status, setStatus] = useState();
+  const [filters, setFilters] = useState(initialFilters);
   const [editing, setEditing] = useState(null);
   const [detailsId, setDetailsId] = useState();
   const query = useQuery({
-    queryKey: ['purchases', 'list', status],
+    queryKey: ['purchases', 'list', filters],
+    queryFn: () => api.listPurchases(filters),
+  });
+  const suppliers = useQuery({
+    queryKey: ['suppliers', 'purchase-filter'],
     queryFn: () =>
-      api.listPurchases({ ...filters, ...(status ? { status } : {}) }),
+      suppliersApi.listSuppliers({ ...initialFilters, sortBy: 'name' }),
+    staleTime: 300_000,
+  });
+  const branches = useQuery({
+    queryKey: ['branches', 'purchase-filter'],
+    queryFn: () =>
+      branchesApi.listBranches({ ...initialFilters, sortBy: 'name' }),
+    staleTime: 300_000,
+  });
+  const warehouses = useQuery({
+    queryKey: ['warehouses', 'purchase-filter', filters.branchId],
+    queryFn: () =>
+      warehousesApi.listWarehouses({
+        ...initialFilters,
+        sortBy: 'name',
+        branchId: filters.branchId,
+      }),
+    enabled: Boolean(filters.branchId),
+    staleTime: 300_000,
   });
   const details = useQuery({
     queryKey: ['purchases', 'detail', detailsId],
@@ -202,17 +228,94 @@ export function PurchaseListPage() {
         }
       />
       <Card>
-        <Select
-          allowClear
-          placeholder="Todos los estados"
-          style={{ width: 220, marginBottom: 16 }}
-          value={status}
-          options={Object.entries(labels).map(([value, label]) => ({
-            value,
-            label,
-          }))}
-          onChange={setStatus}
-        />
+        <Space wrap style={{ marginBottom: 16 }}>
+          <Input.Search
+            allowClear
+            placeholder="Código, orden, proveedor o factura"
+            style={{ width: 330 }}
+            onSearch={(search) =>
+              setFilters((current) => ({
+                ...current,
+                page: 1,
+                search: search.trim() || undefined,
+              }))
+            }
+          />
+          <DatePicker.RangePicker
+            placeholder={['Desde', 'Hasta']}
+            onChange={(range) =>
+              setFilters((current) => ({
+                ...current,
+                page: 1,
+                dateFrom: range?.[0]?.startOf('day').toISOString(),
+                dateTo: range?.[1]?.endOf('day').toISOString(),
+              }))
+            }
+          />
+          <Select
+            allowClear
+            placeholder="Todos los estados"
+            style={{ width: 220 }}
+            options={Object.entries(labels).map(([value, label]) => ({
+              value,
+              label,
+            }))}
+            onChange={(status) =>
+              setFilters((current) => ({ ...current, page: 1, status }))
+            }
+          />
+          <Select
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            placeholder="Todos los proveedores"
+            style={{ width: 250 }}
+            loading={suppliers.isLoading}
+            options={suppliers.data?.suppliers.map((item) => ({
+              value: item.id,
+              label: `${item.code} · ${item.name}`,
+            }))}
+            onChange={(supplierId) =>
+              setFilters((current) => ({ ...current, page: 1, supplierId }))
+            }
+          />
+          <Select
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            placeholder="Todas las sucursales"
+            style={{ width: 230 }}
+            loading={branches.isLoading}
+            options={branches.data?.branches.map((item) => ({
+              value: item.id,
+              label: `${item.code} · ${item.name}`,
+            }))}
+            onChange={(branchId) =>
+              setFilters((current) => ({
+                ...current,
+                page: 1,
+                branchId,
+                warehouseId: undefined,
+              }))
+            }
+          />
+          <Select
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            disabled={!filters.branchId}
+            placeholder="Todos los almacenes"
+            style={{ width: 230 }}
+            loading={warehouses.isLoading}
+            options={warehouses.data?.warehouses.map((item) => ({
+              value: item.id,
+              label: `${item.code} · ${item.name}`,
+            }))}
+            onChange={(warehouseId) =>
+              setFilters((current) => ({ ...current, page: 1, warehouseId }))
+            }
+          />
+        </Space>
         <DataTable
           ariaLabel="Recepciones de compra"
           columns={columns}
@@ -221,6 +324,16 @@ export function PurchaseListPage() {
           error={query.error}
           onRetry={query.refetch}
           pagination={query.data?.pagination ?? { ...filters, total: 0 }}
+          onChange={(next) =>
+            setFilters((current) => ({
+              ...current,
+              ...Object.fromEntries(
+                Object.entries(next).filter(
+                  ([key, value]) => key !== 'filters' && value !== undefined,
+                ),
+              ),
+            }))
+          }
         />
       </Card>
       <Modal
