@@ -21,6 +21,23 @@ import { permissions } from '@/config/permissions.js';
 import { ExpenseTypeForm } from '../components/ExpenseTypeForm.jsx';
 import * as api from '../expense-types.api.js';
 
+const categoryLabels = {
+  FREIGHT: 'Flete',
+  INSURANCE: 'Seguro',
+  IMPORT_DUTY: 'DAI / arancel',
+  OTHER: 'Otro gasto',
+  IMPORT_VAT: 'IVA de importación',
+};
+const allocationLabels = {
+  FOB_VALUE: 'Valor FOB',
+  QUANTITY: 'Cantidad',
+  WEIGHT: 'Peso',
+  VOLUME: 'Volumen',
+  CIF_VALUE: 'Valor CIF',
+  EQUAL: 'Partes iguales',
+  MANUAL: 'Manual',
+};
+
 const filters = { page: 1, pageSize: 100, sortBy: 'name', sortOrder: 'asc' };
 export function ExpenseTypeListPage() {
   const { message } = App.useApp();
@@ -65,6 +82,10 @@ export function ExpenseTypeListPage() {
     { title: 'Código', dataIndex: 'code' },
     { title: 'Nombre', dataIndex: 'name' },
     { title: 'Descripción', dataIndex: 'description' },
+    {
+      title: 'Categoría de retaceo',
+      render: (_, item) => categoryLabels[item.landedCostCategory],
+    },
     {
       title: 'Estado',
       render: (_, item) => (
@@ -183,6 +204,21 @@ export function ExpenseTypeListPage() {
             </Descriptions.Item>
             <Descriptions.Item label="Descripción" span={2}>
               {details.description ?? '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Categoría">
+              {categoryLabels[details.landedCostCategory]}
+            </Descriptions.Item>
+            <Descriptions.Item label="Distribución">
+              {allocationLabels[details.defaultAllocationMethod]}
+            </Descriptions.Item>
+            <Descriptions.Item label="Capitalizable">
+              {details.isCapitalizable ? 'Sí' : 'No'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Impuesto recuperable">
+              {details.isRecoverableTax ? 'Sí' : 'No'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Componente CIF" span={2}>
+              {details.isCifComponent ? 'Sí' : 'No'}
             </Descriptions.Item>
             <Descriptions.Item label="Creado">
               {dayjs(details.createdAt).format('DD/MM/YYYY HH:mm')}
