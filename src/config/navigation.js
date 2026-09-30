@@ -123,6 +123,13 @@ export const navigationItems = Object.freeze([
     permission: permissions.purchases.read,
   }),
   Object.freeze({
+    key: 'retaceos',
+    label: 'Retaceos',
+    path: routes.retaceos,
+    icon: 'retaceos',
+    permission: permissions.retaceos.read,
+  }),
+  Object.freeze({
     key: 'home',
     label: 'Inicio',
     path: routes.home,
