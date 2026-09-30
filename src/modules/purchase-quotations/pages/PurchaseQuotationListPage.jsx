@@ -4,6 +4,7 @@ import {
   App,
   Button,
   Card,
+  DatePicker,
   Descriptions,
   Input,
   Modal,
@@ -19,13 +20,14 @@ import { Can } from '@/components/authorization/Can.jsx';
 import { DataTable } from '@/components/tables/DataTable.jsx';
 import { PageHeader } from '@/components/ui/PageHeader.jsx';
 import { permissions } from '@/config/permissions.js';
+import * as suppliersApi from '@/modules/suppliers/suppliers.api.js';
 import { PurchaseQuotationForm } from '../components/PurchaseQuotationForm.jsx';
 import { PurchaseQuotationRequestLinksForm } from '../components/PurchaseQuotationRequestLinksForm.jsx';
 import { PurchaseQuotationExpensesForm } from '../components/PurchaseQuotationExpensesForm.jsx';
 import { listPurchaseRequests } from '@/modules/purchase-requests/purchase-requests.api.js';
 import { listExpenseTypes } from '@/modules/expense-types/expense-types.api.js';
 import * as api from '../purchase-quotations.api.js';
-const filters = {
+const initialFilters = {
   page: 1,
   pageSize: 100,
   sortBy: 'createdAt',
@@ -57,12 +59,17 @@ export function PurchaseQuotationListPage() {
   const [editing, setEditing] = useState(null),
     [linking, setLinking] = useState(null),
     [expensing, setExpensing] = useState(null),
-    [detailsId, setDetailsId] = useState(null),
-    [status, setStatus] = useState();
+    [detailsId, setDetailsId] = useState(null);
+  const [filters, setFilters] = useState(initialFilters);
   const query = useQuery({
-    queryKey: ['purchase-quotations', 'list', status],
+    queryKey: ['purchase-quotations', 'list', filters],
+    queryFn: () => api.listPurchaseQuotations(filters),
+  });
+  const suppliers = useQuery({
+    queryKey: ['suppliers', 'purchase-quotation-filter'],
     queryFn: () =>
-      api.listPurchaseQuotations({ ...filters, ...(status ? { status } : {}) }),
+      suppliersApi.listSuppliers({ ...initialFilters, sortBy: 'name' }),
+    staleTime: 300_000,
   });
   const details = useQuery({
     queryKey: ['purchase-quotations', 'detail', detailsId],
@@ -256,17 +263,69 @@ export function PurchaseQuotationListPage() {
         }
       />
       <Card>
-        <Select
-          allowClear
-          placeholder="Todos los estados"
-          style={{ width: 220, marginBottom: 16 }}
-          options={Object.entries(labels).map(([value, label]) => ({
-            value,
-            label,
-          }))}
-          value={status}
-          onChange={setStatus}
-        />
+        <Space wrap style={{ marginBottom: 16 }}>
+          <Input.Search
+            allowClear
+            placeholder="Código, proveedor o número de cotización"
+            style={{ width: 350 }}
+            onSearch={(search) =>
+              setFilters((current) => ({
+                ...current,
+                page: 1,
+                search: search.trim() || undefined,
+              }))
+            }
+          />
+          <DatePicker.RangePicker
+            placeholder={['Cotizada desde', 'Cotizada hasta']}
+            onChange={(range) =>
+              setFilters((current) => ({
+                ...current,
+                page: 1,
+                dateFrom: range?.[0]?.startOf('day').toISOString(),
+                dateTo: range?.[1]?.endOf('day').toISOString(),
+              }))
+            }
+          />
+          <DatePicker.RangePicker
+            placeholder={['Vigente desde', 'Vigente hasta']}
+            onChange={(range) =>
+              setFilters((current) => ({
+                ...current,
+                page: 1,
+                validUntilFrom: range?.[0]?.startOf('day').toISOString(),
+                validUntilTo: range?.[1]?.endOf('day').toISOString(),
+              }))
+            }
+          />
+          <Select
+            allowClear
+            placeholder="Todos los estados"
+            style={{ width: 220 }}
+            options={Object.entries(labels).map(([value, label]) => ({
+              value,
+              label,
+            }))}
+            onChange={(status) =>
+              setFilters((current) => ({ ...current, page: 1, status }))
+            }
+          />
+          <Select
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            placeholder="Todos los proveedores"
+            style={{ width: 260 }}
+            loading={suppliers.isLoading}
+            options={suppliers.data?.suppliers.map((item) => ({
+              value: item.id,
+              label: `${item.code} · ${item.name}`,
+            }))}
+            onChange={(supplierId) =>
+              setFilters((current) => ({ ...current, page: 1, supplierId }))
+            }
+          />
+        </Space>
         <DataTable
           ariaLabel="Cotizaciones de compra"
           columns={columns}
@@ -275,6 +334,16 @@ export function PurchaseQuotationListPage() {
           error={query.error}
           onRetry={query.refetch}
           pagination={query.data?.pagination ?? { ...filters, total: 0 }}
+          onChange={(next) =>
+            setFilters((current) => ({
+              ...current,
+              ...Object.fromEntries(
+                Object.entries(next).filter(
+                  ([key, value]) => key !== 'filters' && value !== undefined,
+                ),
+              ),
+            }))
+          }
         />
       </Card>
       <Modal
