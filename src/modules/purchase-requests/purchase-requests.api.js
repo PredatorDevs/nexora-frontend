@@ -24,6 +24,38 @@ export async function downloadPurchaseRequestPdf(id, code) {
   anchor.remove();
   URL.revokeObjectURL(url);
 }
+export async function listPurchaseRequestSegments(requestId) {
+  return (await apiClient.get(`/purchase-requests/${requestId}/segments`)).data;
+}
+export async function createPurchaseRequestSegment(requestId, data) {
+  return (await apiClient.post(`/purchase-requests/${requestId}/segments`, data)).data;
+}
+export async function updatePurchaseRequestSegment(requestId, segment, data) {
+  return (await apiClient.put(`/purchase-requests/${requestId}/segments/${segment.id}`, {
+    ...data,
+    expectedUpdatedAt: segment.updatedAt,
+  })).data;
+}
+export async function transitionPurchaseRequestSegment(requestId, segment, action, reason) {
+  return (await apiClient.post(
+    `/purchase-requests/${requestId}/segments/${segment.id}/${action}`,
+    { expectedUpdatedAt: segment.updatedAt, ...(reason ? { reason } : {}) },
+  )).data;
+}
+export async function downloadPurchaseRequestSegmentPdf(requestId, segment) {
+  const response = await apiClient.get(
+    `/purchase-requests/${requestId}/segments/${segment.id}/pdf`,
+    { responseType: 'blob', headers: { Accept: 'application/pdf' } },
+  );
+  const url = URL.createObjectURL(response.data);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `solicitud-${segment.code}-${segment.supplier.code}.pdf`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
 export async function createPurchaseRequest(data) {
   return (await apiClient.post('/purchase-requests', data)).data;
 }
