@@ -12,6 +12,13 @@ export async function getPurchaseQuotation(id) {
 export async function createPurchaseQuotation(data) {
   return (await apiClient.post('/purchase-quotations', data)).data;
 }
+export async function listPurchaseQuotationSources(supplierId) {
+  return (
+    await apiClient.get('/purchase-quotations/sources', {
+      params: { supplierId },
+    })
+  ).data;
+}
 export async function updatePurchaseQuotation(id, data) {
   return (await apiClient.put(`/purchase-quotations/${id}`, data)).data;
 }

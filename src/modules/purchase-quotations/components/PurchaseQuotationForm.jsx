@@ -3,12 +3,14 @@ import { useQuery } from '@tanstack/react-query';
 import {
   Alert,
   Button,
+  Card,
   Col,
   DatePicker,
   Form,
   Input,
   InputNumber,
   Row,
+  Radio,
   Select,
   Space,
   Statistic,
@@ -18,6 +20,7 @@ import { useMemo, useState } from 'react';
 import { useAuth } from '@/auth/useAuth.js';
 import * as suppliersApi from '@/modules/suppliers/suppliers.api.js';
 import * as productsApi from '@/modules/products/products.api.js';
+import * as quotationsApi from '../purchase-quotations.api.js';
 const params = {
   page: 1,
   pageSize: 100,
@@ -38,6 +41,10 @@ export function PurchaseQuotationForm({
   const defaultCurrency =
     activeMembership?.company?.defaultCurrencyCode ?? 'USD';
   const [supplierId, setSupplierId] = useState(initialValues?.supplierId);
+  const [sourceRequestId, setSourceRequestId] = useState(null);
+  const [sourceMode, setSourceMode] = useState('FULL_REQUEST');
+  const [segmentId, setSegmentId] = useState(null);
+  const [loadedSource, setLoadedSource] = useState(null);
   const suppliers = useQuery({
     queryKey: ['suppliers', 'quotation-options'],
     queryFn: () => suppliersApi.listSuppliers(params),
@@ -51,6 +58,13 @@ export function PurchaseQuotationForm({
     queryKey: ['products', 'quotation-options'],
     queryFn: () => productsApi.listProducts(params),
   });
+  const sources = useQuery({
+    queryKey: ['purchase-quotations', 'sources', supplierId],
+    queryFn: () => quotationsApi.listPurchaseQuotationSources(supplierId),
+    enabled: !initialValues && Boolean(supplierId),
+  });
+  const selectedRequest = sources.data?.find((item) => item.id === sourceRequestId);
+  const availableSegments = selectedRequest?.supplierSegments ?? [];
   const productMap = useMemo(
     () => new Map(products.data?.products.map((x) => [x.id, x]) ?? []),
     [products.data],
@@ -102,6 +116,7 @@ export function PurchaseQuotationForm({
           supplierQuotationNumber: nullable(v.supplierQuotationNumber),
           paymentTerms: nullable(v.paymentTerms),
           notes: nullable(v.notes),
+          ...(!initialValues ? { source: loadedSource } : {}),
           details: v.details.map((x) => ({
             ...x,
             deliveryDays: x.deliveryDays ?? null,
@@ -111,7 +126,7 @@ export function PurchaseQuotationForm({
         })
       }
     >
-      {suppliers.error || contacts.error || products.error ? (
+      {suppliers.error || contacts.error || products.error || sources.error ? (
         <Alert
           type="error"
           showIcon
@@ -136,6 +151,9 @@ export function PurchaseQuotationForm({
               onChange={(v) => {
                 setSupplierId(v);
                 form.setFieldValue('supplierContactId', null);
+                setSourceRequestId(null);
+                setSegmentId(null);
+                setLoadedSource(null);
               }}
             />
           </Form.Item>
@@ -227,6 +245,124 @@ export function PurchaseQuotationForm({
           </Form.Item>
         </Col>
       </Row>
+      {!initialValues && supplierId ? (
+        <Card size="small" title="Precargar desde una solicitud" style={{ marginBottom: 16 }}>
+          <Alert
+            type="info"
+            showIcon
+            message="Opcional"
+            description="Puedes cargar una solicitud consolidada completa o un segmento emitido para este proveedor. Al guardar, los vínculos de origen se crearán automáticamente."
+            style={{ marginBottom: 16 }}
+          />
+          <Row gutter={16}>
+            <Col xs={24} md={10}>
+              <Select
+                allowClear
+                showSearch
+                optionFilterProp="label"
+                placeholder="Seleccionar solicitud consolidada"
+                loading={sources.isLoading}
+                value={sourceRequestId}
+                options={sources.data?.map((item) => ({
+                  value: item.id,
+                  label: `${item.code} · ${item.branch.name} / ${item.warehouse.name}`,
+                }))}
+                onChange={(value) => {
+                  setSourceRequestId(value);
+                  setSourceMode('FULL_REQUEST');
+                  setSegmentId(null);
+                  setLoadedSource(null);
+                }}
+                style={{ width: '100%' }}
+              />
+            </Col>
+            <Col xs={24} md={6}>
+              <Radio.Group
+                value={sourceMode}
+                disabled={!selectedRequest}
+                onChange={(event) => {
+                  setSourceMode(event.target.value);
+                  setSegmentId(null);
+                  setLoadedSource(null);
+                }}
+              >
+                <Radio.Button value="FULL_REQUEST">Solicitud completa</Radio.Button>
+                <Radio.Button value="SEGMENT" disabled={!availableSegments.length}>
+                  Segmento
+                </Radio.Button>
+              </Radio.Group>
+            </Col>
+            <Col xs={24} md={5}>
+              <Select
+                placeholder="Seleccionar segmento"
+                disabled={sourceMode !== 'SEGMENT'}
+                value={segmentId}
+                options={availableSegments.map((item) => ({
+                  value: item.id,
+                  label: item.code,
+                }))}
+                onChange={(value) => {
+                  setSegmentId(value);
+                  setLoadedSource(null);
+                }}
+                style={{ width: '100%' }}
+              />
+            </Col>
+            <Col xs={24} md={3}>
+              <Button
+                type="primary"
+                disabled={
+                  !selectedRequest ||
+                  (sourceMode === 'SEGMENT' && !segmentId)
+                }
+                onClick={() => {
+                  const segment = sourceMode === 'SEGMENT'
+                    ? availableSegments.find((item) => item.id === segmentId)
+                    : null;
+                  const byId = new Map(selectedRequest.details.map((item) => [item.id, item]));
+                  const originDetails = segment
+                    ? segment.details.map((item) => ({
+                        ...byId.get(item.purchaseRequestDetailId),
+                        quantity: item.quantity,
+                        notes: item.notes ?? byId.get(item.purchaseRequestDetailId)?.notes,
+                      }))
+                    : selectedRequest.details;
+                  form.setFieldValue(
+                    'details',
+                    originDetails.map((item) => ({
+                      purchaseRequestDetailId: item.id,
+                      productId: item.productId,
+                      productUnitId: item.productUnitId,
+                      quantity: Number(item.quantity),
+                      unitPrice: 0,
+                      discountRate: 0,
+                      taxRate: 13,
+                      availableQuantity: null,
+                      deliveryDays: null,
+                      notes: item.notes ?? null,
+                    })),
+                  );
+                  setLoadedSource({
+                    mode: sourceMode,
+                    purchaseRequestId: selectedRequest.id,
+                    segmentId: segment?.id ?? null,
+                  });
+                }}
+              >
+                Cargar
+              </Button>
+            </Col>
+          </Row>
+          {loadedSource ? (
+            <Alert
+              type="success"
+              showIcon
+              message={`Origen cargado: ${selectedRequest?.code ?? ''}${loadedSource.segmentId ? ` / ${availableSegments.find((item) => item.id === loadedSource.segmentId)?.code ?? ''}` : ''}`}
+              style={{ marginTop: 12 }}
+            />
+          ) : null}
+        </Card>
+      ) : null}
       <Form.List name="details">
         {(fields, { add, remove }) => (
           <>
@@ -240,6 +376,7 @@ export function PurchaseQuotationForm({
                     rules={[{ required: true }]}
                   >
                     <Select
+                      disabled={Boolean(rows[name]?.purchaseRequestDetailId)}
                       showSearch
                       optionFilterProp="label"
                       options={products.data?.products.map((x) => ({
@@ -337,11 +474,15 @@ export function PurchaseQuotationForm({
                 <Form.Item {...rest} name={[name, 'productUnitId']} hidden>
                   <InputNumber />
                 </Form.Item>
+                <Form.Item {...rest} name={[name, 'purchaseRequestDetailId']} hidden>
+                  <InputNumber />
+                </Form.Item>
               </Row>
             ))}
             <Button
               type="dashed"
               icon={<PlusOutlined />}
+              disabled={Boolean(loadedSource)}
               onClick={() =>
                 add({ quantity: 1, unitPrice: 0, discountRate: 0, taxRate: 13 })
               }
