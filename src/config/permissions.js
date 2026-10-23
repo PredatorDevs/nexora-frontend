@@ -143,6 +143,15 @@ export const permissions = Object.freeze({
     close: 'retaceos.close',
     cancel: 'retaceos.cancel',
   }),
+  inventory: Object.freeze({
+    read: 'inventory.read',
+    lotsRead: 'inventory.lots_read',
+    receive: 'inventory.receive',
+    labelsPrint: 'inventory.labels_print',
+    locationsAssign: 'inventory.locations_assign',
+    kardexRead: 'inventory.kardex_read',
+    costsRead: 'inventory.costs_read',
+  }),
   files: Object.freeze({
     read: 'files.read',
     create: 'files.create',

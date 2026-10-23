@@ -27,6 +27,7 @@ import { purchaseQuotationRoutes } from '@/modules/purchase-quotations/purchase-
 import { purchaseOrderRoutes } from '@/modules/purchase-orders/purchase-orders.routes.jsx';
 import { purchaseRoutes } from '@/modules/purchases/purchases.routes.jsx';
 import { retaceoRoutes } from '@/modules/retaceos/retaceos.routes.jsx';
+import { inventoryRoutes } from '@/modules/inventory/inventory.routes.jsx';
 
 const loginPage = lazyRoute(
   () => import('@/modules/auth/pages/LoginPage.jsx'),
@@ -110,6 +111,7 @@ export const appRoutes = [
           ...purchaseOrderRoutes,
           ...purchaseRoutes,
           ...retaceoRoutes,
+          ...inventoryRoutes,
         ],
       },
     ],

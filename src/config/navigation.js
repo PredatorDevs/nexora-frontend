@@ -130,6 +130,13 @@ export const navigationItems = Object.freeze([
     permission: permissions.retaceos.read,
   }),
   Object.freeze({
+    key: 'inventory-receipts',
+    label: 'Ingreso a inventario',
+    path: routes.inventoryReceipts,
+    icon: 'inventoryReceipts',
+    permission: permissions.inventory.receive,
+  }),
+  Object.freeze({
     key: 'home',
     label: 'Inicio',
     path: routes.home,
