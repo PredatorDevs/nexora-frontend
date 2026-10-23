@@ -39,6 +39,7 @@ export function PurchaseForm({
     form.setFieldsValue({
       purchaseOrderId: initialValues.purchaseOrderId,
       purchaseDate: dayjs(initialValues.purchaseDate),
+      costingMode: initialValues.costingMode ?? 'DIRECT',
       supplierInvoiceNumber: initialValues.supplierInvoiceNumber,
       supplierInvoiceDate: initialValues.supplierInvoiceDate
         ? dayjs(initialValues.supplierInvoiceDate)
@@ -77,6 +78,7 @@ export function PurchaseForm({
       purchaseOrderId: values.purchaseOrderId,
       expectedOrderUpdatedAt: availability.data.purchaseOrder.updatedAt,
       purchaseDate: values.purchaseDate.toISOString(),
+      costingMode: values.costingMode,
       supplierInvoiceNumber: values.supplierInvoiceNumber?.trim() || null,
       supplierInvoiceDate:
         values.supplierInvoiceDate?.format('YYYY-MM-DD') ?? null,
@@ -85,7 +87,12 @@ export function PurchaseForm({
     });
   }
   return (
-    <Form form={form} layout="vertical" onFinish={finish}>
+    <Form
+      form={form}
+      layout="vertical"
+      initialValues={{ costingMode: 'DIRECT' }}
+      onFinish={finish}
+    >
       <Form.Item
         name="purchaseOrderId"
         label="Orden de compra"
@@ -117,6 +124,25 @@ export function PurchaseForm({
           message={`${availability.data.purchaseOrder.supplier.name} · ${availability.data.purchaseOrder.branch.name} / ${availability.data.purchaseOrder.warehouse.name} · ${availability.data.purchaseOrder.currencyCode}`}
         />
       ) : null}
+      <Form.Item
+        name="costingMode"
+        label="Ingreso a inventario"
+        rules={[{ required: true }]}
+        tooltip="Define cuándo estará disponible esta recepción para generar existencias."
+      >
+        <Select
+          options={[
+            {
+              value: 'DIRECT',
+              label: 'Costo directo (sin retaceo)',
+            },
+            {
+              value: 'LANDED_COST',
+              label: 'Costo importado (requiere retaceo cerrado)',
+            },
+          ]}
+        />
+      </Form.Item>
       <Space size="middle" wrap style={{ width: '100%' }}>
         <Form.Item
           name="purchaseDate"

@@ -432,6 +432,14 @@ export function PurchaseListPage() {
                   children: `${value.currencyCode} · ${value.exchangeRate}`,
                 },
                 {
+                  key: 'costingMode',
+                  label: 'Ingreso a inventario',
+                  children:
+                    value.costingMode === 'LANDED_COST'
+                      ? 'Costo importado · requiere retaceo cerrado'
+                      : 'Costo directo',
+                },
+                {
                   key: 'totals',
                   label: 'Subtotal / Descuento / Impuesto / Total',
                   span: 2,
