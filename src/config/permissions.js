@@ -151,6 +151,10 @@ export const permissions = Object.freeze({
     locationsAssign: 'inventory.locations_assign',
     kardexRead: 'inventory.kardex_read',
     costsRead: 'inventory.costs_read',
+    transfersCreate: 'inventory.transfers_create',
+    transfersDispatch: 'inventory.transfers_dispatch',
+    transfersReceive: 'inventory.transfers_receive',
+    transfersCancel: 'inventory.transfers_cancel',
   }),
   files: Object.freeze({
     read: 'files.read',

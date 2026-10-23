@@ -52,6 +52,7 @@ const icons = Object.freeze({
   inventoryReceipts: <InboxOutlined />,
   inventory: <DatabaseOutlined />,
   inventoryLots: <TagsOutlined />,
+  inventoryTransfers: <SwapOutlined />,
   quotationComparison: <SwapOutlined />,
   retaceos: <CalculatorOutlined />,
   roles: <IdcardOutlined />,
