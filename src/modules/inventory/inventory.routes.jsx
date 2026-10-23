@@ -11,7 +11,15 @@ const lotsPage = lazyRoute(
   () => import('./pages/InventoryLotPage.jsx'),
   'InventoryLotPage',
 );
+const overviewPage = lazyRoute(
+  () => import('./pages/InventoryOverviewPage.jsx'),
+  'InventoryOverviewPage',
+);
 export const inventoryRoutes = [
+  {
+    element: <RequirePermission permission={permissions.inventory.read} />,
+    children: [{ path: routes.inventory, element: overviewPage }],
+  },
   {
     element: <RequirePermission permission={permissions.inventory.receive} />,
     children: [{ path: routes.inventoryReceipts, element: page }],

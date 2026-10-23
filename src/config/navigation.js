@@ -137,6 +137,13 @@ export const navigationItems = Object.freeze([
     permission: permissions.inventory.receive,
   }),
   Object.freeze({
+    key: 'inventory',
+    label: 'Inventario',
+    path: routes.inventory,
+    icon: 'inventory',
+    permission: permissions.inventory.read,
+  }),
+  Object.freeze({
     key: 'inventory-lots',
     label: 'Lotes de inventario',
     path: routes.inventoryLots,

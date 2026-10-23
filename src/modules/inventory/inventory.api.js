@@ -33,3 +33,15 @@ export async function printLabels(lot, data) {
   anchor.click();
   URL.revokeObjectURL(url);
 }
+export async function listStock(params) {
+  const response = await apiClient.get('/inventory/stock', { params });
+  return { stock: response.data, pagination: response.meta.pagination };
+}
+export async function listKardex(params) {
+  const response = await apiClient.get('/inventory/kardex', { params });
+  return { movements: response.data, pagination: response.meta.pagination };
+}
+export async function listCosts(params) {
+  const response = await apiClient.get('/inventory/costs', { params });
+  return { costs: response.data, pagination: response.meta.pagination };
+}
