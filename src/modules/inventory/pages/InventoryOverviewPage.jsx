@@ -1,10 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
-import { DatePicker, Input, Select, Space, Table, Tabs, Tag } from 'antd';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Button, DatePicker, Input, Modal, Select, Space, Table, Tabs, Tag, message } from 'antd';
 import { useState } from 'react';
 import { PageHeader } from '@/components/ui/PageHeader.jsx';
 import { useAuth } from '@/auth/useAuth.js';
 import { permissions as permissionCodes } from '@/config/permissions.js';
 import * as api from '../inventory.api.js';
+import { Can } from '@/components/authorization/Can.jsx';
+import { reverseMovement } from '@/modules/inventory-adjustments/inventory-adjustments.api.js';
 
 const base = { page: 1, pageSize: 20, sortOrder: 'desc' };
 const number = (value, digits = 4) => Number(value ?? 0).toLocaleString('es-SV', { minimumFractionDigits: 0, maximumFractionDigits: digits });
@@ -32,9 +34,15 @@ export function InventoryOverviewPage() {
   const [stockFilters, setStockFilters] = useState({ ...base, sortBy: 'updatedAt' });
   const [kardexFilters, setKardexFilters] = useState({ ...base, sortBy: 'movementDate' });
   const [costFilters, setCostFilters] = useState({ ...base, sortBy: 'updatedAt' });
+  const client = useQueryClient();
   const stock = useQuery({ queryKey: ['inventory', 'stock', stockFilters], queryFn: () => api.listStock(stockFilters) });
   const kardex = useQuery({ queryKey: ['inventory', 'kardex', kardexFilters], queryFn: () => api.listKardex(kardexFilters), enabled: canKardex });
   const costs = useQuery({ queryKey: ['inventory', 'costs', costFilters], queryFn: () => api.listCosts(costFilters), enabled: canCosts });
+  const reversal = useMutation({ mutationFn: ({ id, reason }) => reverseMovement(id, reason), onSuccess: async () => { message.success('Movimiento revertido mediante un asiento compensatorio.'); await client.invalidateQueries({ queryKey: ['inventory'] }); }, onError: (error) => message.error(error.message) });
+  const requestReversal = (item) => Modal.confirm({
+    title: 'Revertir movimiento', content: <Input.TextArea id="movement-reversal-reason" rows={3} placeholder="Motivo de la reversión" />,
+    onOk: () => { const reason = document.getElementById('movement-reversal-reason')?.value.trim(); if (!reason || reason.length < 3) { message.error('Escribe un motivo de al menos 3 caracteres.'); return Promise.reject(); } return reversal.mutateAsync({ id: item.id, reason }); },
+  });
   const search = (setter) => (value) => setter((current) => ({ ...current, page: 1, search: value.trim() || undefined }));
   const stockTab = <Space direction="vertical" style={{ width: '100%' }}>
     <Input.Search allowClear placeholder="Producto, lote o ubicación" onSearch={search(setStockFilters)} style={{ maxWidth: 420 }} />
@@ -66,6 +74,7 @@ export function InventoryOverviewPage() {
       { title: 'Salida', render: (_, x) => number(x.quantityOut) },
       { title: 'Costo', render: (_, x) => money(x.totalCost) },
       { title: 'Usuario', render: (_, x) => x.confirmedBy.displayName },
+      { title: 'Acciones', fixed: 'right', render: (_, x) => ['ADJUSTMENT_IN', 'ADJUSTMENT_OUT'].includes(x.movementType) && !x.hasReversal ? <Can permission={permissionCodes.inventory.movementsReverse}><Button danger size="small" onClick={() => requestReversal(x)}>Revertir</Button></Can> : x.hasReversal ? <Tag>Revertido</Tag> : null },
     ]} />
   </Space>;
   const costsTab = <Space direction="vertical" style={{ width: '100%' }}>

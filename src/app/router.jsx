@@ -29,6 +29,7 @@ import { purchaseRoutes } from '@/modules/purchases/purchases.routes.jsx';
 import { retaceoRoutes } from '@/modules/retaceos/retaceos.routes.jsx';
 import { inventoryRoutes } from '@/modules/inventory/inventory.routes.jsx';
 import { inventoryTransferRoutes } from '@/modules/inventory-transfers/inventory-transfers.routes.jsx';
+import { inventoryAdjustmentRoutes } from '@/modules/inventory-adjustments/inventory-adjustments.routes.jsx';
 
 const loginPage = lazyRoute(
   () => import('@/modules/auth/pages/LoginPage.jsx'),
@@ -114,6 +115,7 @@ export const appRoutes = [
           ...retaceoRoutes,
           ...inventoryRoutes,
           ...inventoryTransferRoutes,
+          ...inventoryAdjustmentRoutes,
         ],
       },
     ],

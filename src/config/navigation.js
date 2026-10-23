@@ -158,6 +158,13 @@ export const navigationItems = Object.freeze([
     permission: permissions.inventory.read,
   }),
   Object.freeze({
+    key: 'inventory-adjustments',
+    label: 'Ajustes de inventario',
+    path: routes.inventoryAdjustments,
+    icon: 'inventoryAdjustments',
+    permission: permissions.inventory.read,
+  }),
+  Object.freeze({
     key: 'home',
     label: 'Inicio',
     path: routes.home,

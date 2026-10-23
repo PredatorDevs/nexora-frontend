@@ -25,6 +25,7 @@ export const routes = Object.freeze({
   inventoryReceipts: '/inventory/receipts',
   inventoryLots: '/inventory/lots',
   inventoryTransfers: '/inventory/transfers',
+  inventoryAdjustments: '/inventory/adjustments',
   users: '/users',
   roles: '/roles',
   permissions: '/permissions',

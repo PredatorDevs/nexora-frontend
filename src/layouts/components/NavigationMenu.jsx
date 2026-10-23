@@ -24,6 +24,7 @@ import {
   TagsOutlined,
   TeamOutlined,
   TrademarkOutlined,
+  ToolOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import { Menu } from 'antd';
@@ -53,6 +54,7 @@ const icons = Object.freeze({
   inventory: <DatabaseOutlined />,
   inventoryLots: <TagsOutlined />,
   inventoryTransfers: <SwapOutlined />,
+  inventoryAdjustments: <ToolOutlined />,
   quotationComparison: <SwapOutlined />,
   retaceos: <CalculatorOutlined />,
   roles: <IdcardOutlined />,
