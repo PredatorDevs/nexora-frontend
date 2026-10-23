@@ -14,3 +14,6 @@ export async function transitionTransfer(item, action, reason) {
     expectedUpdatedAt: item.updatedAt, ...(reason ? { reason } : {}),
   })).data;
 }
+export async function createRelocation(data) {
+  return (await apiClient.post('/inventory-transfers/relocations', data)).data;
+}

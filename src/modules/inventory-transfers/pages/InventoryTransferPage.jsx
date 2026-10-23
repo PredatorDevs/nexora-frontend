@@ -6,6 +6,7 @@ import { Can } from '@/components/authorization/Can.jsx';
 import { PageHeader } from '@/components/ui/PageHeader.jsx';
 import { permissions } from '@/config/permissions.js';
 import { InventoryTransferForm } from '../components/InventoryTransferForm.jsx';
+import { InventoryRelocationForm } from '../components/InventoryRelocationForm.jsx';
 import * as api from '../inventory-transfers.api.js';
 
 const labels = { PREPARATION: 'En preparación', IN_TRANSIT: 'En tránsito', RECEIVED: 'Recibido', INCIDENT: 'Incidencia', CANCELLED: 'Cancelado' };
@@ -16,12 +17,14 @@ const date = (value) => value ? new Intl.DateTimeFormat('es-SV', { dateStyle: 's
 export function InventoryTransferPage() {
   const [filters, setFilters] = useState(initial);
   const [creating, setCreating] = useState(false);
+  const [relocating, setRelocating] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const client = useQueryClient();
   const list = useQuery({ queryKey: ['inventory-transfers', filters], queryFn: () => api.listTransfers(filters) });
   const detail = useQuery({ queryKey: ['inventory-transfers', 'detail', selectedId], queryFn: () => api.getTransfer(selectedId), enabled: Boolean(selectedId) });
   const refresh = async () => { await client.invalidateQueries({ queryKey: ['inventory-transfers'] }); await client.invalidateQueries({ queryKey: ['inventory'] }); };
   const create = useMutation({ mutationFn: api.createTransfer, onSuccess: async () => { message.success('Traslado creado.'); setCreating(false); await refresh(); }, onError: (error) => message.error(error.message) });
+  const relocate = useMutation({ mutationFn: api.createRelocation, onSuccess: async () => { message.success('Existencias reubicadas.'); setRelocating(false); await refresh(); }, onError: (error) => message.error(error.message) });
   const transition = useMutation({
     mutationFn: ({ item, action, reason }) => api.transitionTransfer(item, action, reason),
     onSuccess: async (_, variables) => { message.success(variables.action === 'dispatch' ? 'Traslado despachado.' : variables.action === 'receive' ? 'Traslado recibido.' : 'Traslado actualizado.'); await refresh(); },
@@ -43,7 +46,7 @@ export function InventoryTransferPage() {
     {item.status === 'PREPARATION' ? <Can permission={permissions.inventory.transfersCancel}><Button danger onClick={() => reason(item, 'cancel', 'Cancelar traslado')}>Cancelar</Button></Can> : null}
   </Space>;
   return <Space direction="vertical" size="large" style={{ width: '100%' }}>
-    <PageHeader title="Traslados de inventario" description="Controla la preparación, tránsito y recepción entre almacenes." extra={<Can permission={permissions.inventory.transfersCreate}><Button type="primary" icon={<PlusOutlined />} onClick={() => setCreating(true)}>Nuevo traslado</Button></Can>} />
+    <PageHeader title="Traslados de inventario" description="Controla traslados entre almacenes y reubicaciones internas." extra={<Space><Can permission={permissions.inventory.relocationsCreate}><Button onClick={() => setRelocating(true)}>Reubicar dentro del almacén</Button></Can><Can permission={permissions.inventory.transfersCreate}><Button type="primary" icon={<PlusOutlined />} onClick={() => setCreating(true)}>Nuevo traslado</Button></Can></Space>} />
     <Space wrap><Input.Search allowClear placeholder="Código o almacén" onSearch={(search) => setFilters({ ...initial, search: search.trim() || undefined })} style={{ width: 320 }} /><Select allowClear placeholder="Estado" style={{ width: 190 }} options={Object.entries(labels).map(([value, label]) => ({ value, label }))} onChange={(status) => setFilters((value) => ({ ...value, page: 1, status }))} /></Space>
     <Table rowKey="id" loading={list.isLoading} dataSource={list.data?.transfers ?? []} pagination={{ current: filters.page, pageSize: filters.pageSize, total: list.data?.pagination.total ?? 0, onChange: (page, pageSize) => setFilters((value) => ({ ...value, page, pageSize })) }} scroll={{ x: 1100 }} columns={[
       { title: 'Código', dataIndex: 'code' },
@@ -54,6 +57,7 @@ export function InventoryTransferPage() {
       { title: 'Acciones', render: (_, x) => actions(x) },
     ]} />
     <Modal open={creating} width={1050} title="Nuevo traslado" footer={null} onCancel={() => setCreating(false)} destroyOnHidden><InventoryTransferForm onCancel={() => setCreating(false)} onSubmit={(values) => create.mutateAsync(values)} isSubmitting={create.isPending} /></Modal>
+    <Modal open={relocating} width={1050} title="Reubicación interna" footer={null} onCancel={() => setRelocating(false)} destroyOnHidden><InventoryRelocationForm onCancel={() => setRelocating(false)} onSubmit={(values) => relocate.mutateAsync(values)} isSubmitting={relocate.isPending} /></Modal>
     <Modal open={Boolean(selectedId)} width={1000} title={detail.data ? `Traslado ${detail.data.code}` : 'Traslado'} footer={null} onCancel={() => setSelectedId(null)}>
       {detail.data ? <><Descriptions bordered column={2} items={[
         { key: 'status', label: 'Estado', children: <Tag color={colors[detail.data.status]}>{labels[detail.data.status]}</Tag> },

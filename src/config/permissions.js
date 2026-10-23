@@ -154,6 +154,7 @@ export const permissions = Object.freeze({
     adjustmentsCreate: 'inventory.adjustments_create',
     adjustmentsApprove: 'inventory.adjustments_approve',
     movementsReverse: 'inventory.movements_reverse',
+    relocationsCreate: 'inventory.relocations_create',
     transfersCreate: 'inventory.transfers_create',
     transfersDispatch: 'inventory.transfers_dispatch',
     transfersReceive: 'inventory.transfers_receive',
