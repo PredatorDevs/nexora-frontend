@@ -7,7 +7,17 @@ const page = lazyRoute(
   () => import('./pages/InventoryReceiptPage.jsx'),
   'InventoryReceiptPage',
 );
-export const inventoryRoutes = [{
-  element: <RequirePermission permission={permissions.inventory.receive} />,
-  children: [{ path: routes.inventoryReceipts, element: page }],
-}];
+const lotsPage = lazyRoute(
+  () => import('./pages/InventoryLotPage.jsx'),
+  'InventoryLotPage',
+);
+export const inventoryRoutes = [
+  {
+    element: <RequirePermission permission={permissions.inventory.receive} />,
+    children: [{ path: routes.inventoryReceipts, element: page }],
+  },
+  {
+    element: <RequirePermission permission={permissions.inventory.lotsRead} />,
+    children: [{ path: routes.inventoryLots, element: lotsPage }],
+  },
+];
